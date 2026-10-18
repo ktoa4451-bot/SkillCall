@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1630">
+<title>SkillCall — видеозвонки для учёбы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f6fb;--ink:#14213d;--mute:#5d6b86;--line:#dbe1ee;--blue:#3d3df5;--blue2:#2b2bc9;--mark:#ffd23f;--bad:#d8344a;--night:#0b1228;--night2:#18234a;--night3:#27356b}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Onest,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+*{-webkit-tap-highlight-color:transparent}
+.tile,.dock,.prev,.chat h3{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.cb:focus:not(:focus-visible),.btn:focus:not(:focus-visible){outline:0}
+:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.hide{display:none!important}
+.logo{font-weight:800;font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.logo b{width:13px;height:13px;border-radius:50%;background:var(--mark);box-shadow:0 0 0 3px rgba(255,210,63,.3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:700;background:var(--blue);color:#fff;transition:background .15s,transform .1s}
+.btn:hover{background:var(--blue2)}
+.btn:active{transform:scale(.98)}
+.btn.lg{padding:15px 24px;font-size:17px;border-radius:14px}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;background:#fff;transition:border-color .15s}
+input:focus{border-color:var(--blue);outline:0}
+.err{color:var(--bad);font-size:14px;min-height:21px}
+/* ---------- лобби ---------- */
+#lobby{min-height:100%;display:flex;flex-direction:column;background:linear-gradient(#e7ebf5 1px,transparent 1px) 0 0/34px 34px,linear-gradient(90deg,#e7ebf5 1px,transparent 1px) 0 0/34px 34px,var(--paper)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 32px}
+.tag{color:var(--mute);font-size:14px}
+.lob{flex:1;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:56px;max-width:1180px;width:100%;margin:0 auto;padding:12px 32px 48px;align-items:center}
+.prev{position:relative;aspect-ratio:16/10;background:var(--night);border-radius:26px;overflow:hidden;box-shadow:0 0 0 0 var(--mark);transition:box-shadow .15s}
+.prev.talk{box-shadow:0 0 0 4px var(--mark)}
+.prev video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.prev .ctl{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:12px}
+.hint{color:var(--mute);font-size:14px;margin-top:14px;text-align:center}
+.act{display:grid;gap:14px;background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:32px}
+.act h2{font-size:clamp(30px,3.6vw,42px);line-height:1.05;font-weight:800;letter-spacing:-.025em}
+.sub{color:var(--mute);margin-bottom:6px}
+.lab{font-weight:700;font-size:14px;margin-bottom:-8px}
+.row{display:flex;gap:8px}
+.sep{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.feat{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:14px;padding-top:14px;border-top:1px solid var(--line)}
+.feat li{display:flex;align-items:center;gap:7px}
+.feat svg{width:17px;height:17px;color:var(--blue)}
+/* ---------- встреча ---------- */
+#call{height:100%;display:flex;background:var(--night);color:#fff;overflow:hidden}
+.stage{flex:1;display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top,0px));gap:12px}
+.code{display:flex;align-items:center;gap:8px;background:var(--night2);padding:8px 14px;border-radius:12px;font-weight:500;font-size:14px;transition:background .15s}
+.code:hover{background:var(--night3)}
+.meta{display:flex;gap:8px;font-size:14px;color:#aab6d6}
+.meta span{background:var(--night2);padding:8px 12px;border-radius:12px;font-variant-numeric:tabular-nums}
+.grid{flex:1;display:grid;gap:12px;padding:0 16px;grid-template-columns:repeat(var(--c,1),minmax(0,1fr));grid-auto-rows:minmax(0,1fr);min-height:0;overflow:auto;align-content:center}
+.grid[data-n="1"]{max-width:1000px;width:100%;margin:0 auto}
+.tile{position:relative;background:var(--night2);border-radius:20px;overflow:hidden;min-height:150px;box-shadow:0 0 0 0 var(--mark);transition:box-shadow .15s}
+.tile.talk{box-shadow:0 0 0 4px var(--mark)}
+.tile video{width:100%;height:100%;object-fit:cover;background:#000}
+.tile.me video:not(.scr){transform:scaleX(-1)}
+.tile video.scr{object-fit:contain}
+.nm{position:absolute;left:12px;bottom:12px;background:rgba(11,18,40,.7);backdrop-filter:blur(8px);padding:4px 11px;border-radius:10px;font-size:13px;font-weight:500;display:flex;gap:6px;align-items:center}
+.nm svg{width:14px;height:14px;color:#ff7b8d}
+.av{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,var(--night3),var(--night2))}
+.tile.nocam .av{display:flex}
+.tile.nocam video{visibility:hidden}
+.av span{width:92px;height:92px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font-size:38px;font-weight:800}
+.hd{position:absolute;top:12px;right:12px;background:var(--mark);color:var(--ink);border-radius:12px;padding:7px;display:none}
+.tile.hand .hd{display:block}
+.dock{display:flex;justify-content:center;gap:10px;margin:14px auto;margin-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:10px 14px;background:rgba(24,35,74,.9);backdrop-filter:blur(12px);border-radius:32px;width:max-content;max-width:calc(100% - 24px)}
+.cb{width:52px;height:52px;border-radius:50%;background:var(--night3);color:#fff;display:grid;place-items:center;transition:background .15s,transform .1s}
+.cb:hover{background:#34458a}
+.cb:active{transform:scale(.94)}
+.cb.off{background:var(--bad)}
+.cb.on{background:var(--mark);color:var(--ink)}
+.cb.end{background:var(--bad);width:72px;border-radius:26px}
+.cb.end svg{transform:rotate(135deg)}
+.prev .cb{background:rgba(11,18,40,.75);backdrop-filter:blur(8px)}
+.prev .cb.off{background:var(--bad)}
+.chat{width:340px;background:#fff;color:var(--ink);display:flex;flex-direction:column;margin:12px 12px 12px 0;border-radius:22px;overflow:hidden}
+.chat h3{padding:16px 18px;border-bottom:1px solid var(--line)}
+.msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:8px;align-content:start}
+.m{background:#eef1f8;padding:8px 12px;border-radius:14px 14px 14px 4px;max-width:88%;justify-self:start}
+.m b{font-size:12px;color:var(--blue);display:block}
+.m p{word-break:break-word}
+.m.self{justify-self:end;background:var(--blue);color:#fff;border-radius:14px 14px 4px 14px}
+.send{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.send .btn{padding:10px 14px}
+.toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
+
+.hero{font-size:clamp(34px,4.4vw,56px);line-height:1.02;font-weight:800;letter-spacing:-.03em;margin-bottom:22px;max-width:11em}
+.perm{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 30%,var(--night3),var(--night));color:#fff;z-index:2}
+.perm>div{max-width:370px;display:grid;gap:12px;justify-items:center}
+.perm h3{font-size:22px;line-height:1.2}
+.perm p{color:#aab6d6;font-size:15px}
+.perm .pe{color:#ffb4bf}
+.pi{width:64px;height:64px;border-radius:50%;background:var(--blue);display:grid;place-items:center}
+.pi svg{width:28px;height:28px}
+.prev::after{content:"";position:absolute;left:20px;right:20px;bottom:0;height:5px;border-radius:5px 5px 0 0;background:var(--mark);transform:scaleX(var(--lvl,0));transform-origin:left;transition:transform .12s}
+.tile{animation:pop .25s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+.stage{background:radial-gradient(900px 520px at 50% -8%,#1a2a5e,transparent 70%)}
+
+#auth{min-height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.ahero{background:radial-gradient(700px 420px at 20% 0,#1d2f6b,var(--night) 70%);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:36px}
+.ahero h1{font-size:clamp(34px,4.6vw,56px);line-height:1.04;font-weight:800;letter-spacing:-.03em;max-width:10em}
+.ahero p{color:#aab6d6;max-width:28em;margin-top:16px}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:400px}
+.mini div{aspect-ratio:4/3;border-radius:14px;background:var(--night2);position:relative}
+.mini div:nth-child(2){box-shadow:0 0 0 3px var(--mark)}
+.mini div::after{content:"";position:absolute;left:50%;top:36%;width:30%;aspect-ratio:1;border-radius:50%;background:var(--night3);transform:translateX(-50%)}
+.abox{display:flex;align-items:center;justify-content:center;padding:32px;background:linear-gradient(#e7ebf5 1px,transparent 1px) 0 0/34px 34px,linear-gradient(90deg,#e7ebf5 1px,transparent 1px) 0 0/34px 34px,var(--paper)}
+.acard{width:100%;max-width:400px;display:grid;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:30px}
+.acard h2{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.tabs{display:flex;gap:4px;background:#e8ecf5;border-radius:12px;padding:4px}
+.tabs button{flex:1;padding:9px;border-radius:9px;font-weight:700;color:var(--mute);transition:background .15s}
+.tabs button[aria-selected=true]{background:#fff;color:var(--ink)}
+.err.ok{color:#1a7f4b}
+.who{display:flex;align-items:center;gap:12px;font-weight:500}
+.gh{color:var(--mute);font-size:13px;text-align:center}
+#ji{display:none}
+.act.invite #ji{display:inline-flex}
+.act.invite #mk,.act.invite .sep,.act.invite .row{display:none}
+.cb.dis{opacity:.45}
+.inv{margin:0 16px 12px;background:var(--night2);border-radius:18px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:relative}
+.invt{flex:1;min-width:220px;display:grid;gap:2px;padding-right:24px}
+.invt span{color:#aab6d6;font-size:14px}
+.invt code{font-family:inherit;background:var(--night);padding:6px 10px;border-radius:10px;font-size:13px;overflow-wrap:anywhere;margin-top:6px;user-select:text;-webkit-user-select:text}
+.invb{display:flex;gap:8px;flex-wrap:wrap}
+.invx{position:absolute;top:6px;right:10px;font-size:22px;line-height:1;color:#aab6d6;padding:6px 8px}
+@media(max-width:820px){
+#auth{grid-template-columns:1fr}.ahero{padding:24px;gap:20px}.mini{display:none}.abox{padding:20px 16px}.acard{padding:22px}.who #lname{display:none}
+.lob{grid-template-columns:1fr;gap:20px;padding:0 16px 32px}.top{padding:16px}.tag{display:none}
+.prev{aspect-ratio:4/3;border-radius:20px}.act{padding:22px;border-radius:20px}
+.chat{position:fixed;inset:0;width:100%;margin:0;border-radius:0;z-index:5}
+.cb{width:46px;height:46px}.cb.end{width:60px}.dock{gap:6px;padding:8px 10px}
+.meta #tm{display:none}.tile{min-height:120px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="auth" class="hide">
+  <div class="ahero">
+    <div class="logo"><b></b>SkillCall</div>
+    <div><h1>Войдите, чтобы начать занятие</h1><p>Один аккаунт для всех встреч: создавайте комнаты, приглашайте группу и подключайтесь с телефона или компьютера.</p></div>
+    <div class="mini"><div></div><div></div><div></div></div>
+  </div>
+  <div class="abox">
+    <form class="acard" id="af" novalidate>
+      <h2 id="at">Вход</h2>
+      <div class="tabs" role="tablist"><button type="button" role="tab" id="t-in" aria-selected="true">Вход</button><button type="button" role="tab" id="t-up" aria-selected="false">Регистрация</button></div>
+      <input id="an" placeholder="Ваше имя" autocomplete="name" maxlength="40" class="hide">
+      <input id="ae" type="email" placeholder="Электронная почта" autocomplete="email" required>
+      <input id="ap" type="password" placeholder="Пароль (минимум 6 символов)" autocomplete="current-password" required>
+      <div class="err" id="aerr" role="alert"></div>
+      <button class="btn lg" id="asub">Войти</button>
+      <div class="sep"><span>или</span></div>
+      <button type="button" class="btn ghost" id="ag">Продолжить как гость</button>
+      <p class="gh">Без регистрации: нужно только имя.</p>
+    </form>
+  </div>
+</section>
+
+<section id="lobby">
+  <header class="top"><div class="logo"><b></b>SkillCall</div><span class="tag" id="tag">Видеозвонки для учёбы</span><div class="who hide" id="who"><span id="lname"></span><button class="btn ghost" id="lout" style="padding:8px 14px">Выйти</button></div></header>
+  <main class="lob">
+    <div>
+      <h1 class="hero">Занятие начинается по ссылке</h1>
+      <div class="prev"><video id="pv" autoplay muted playsinline></video>
+        <div class="perm" id="perm"><div><div class="pi" id="pi"></div><h3 id="ph">Разрешите доступ к камере и микрофону</h3>
+          <p id="pt">Сейчас браузер покажет запрос. Нажмите «Разрешить», чтобы вас было видно и слышно.</p>
+          <button class="btn" id="pg">Разрешить доступ</button><p class="pe" id="pe" role="alert"></p></div></div>
+        <div class="ctl"><button class="cb" id="pm" aria-label="Микрофон"></button><button class="cb" id="pc" aria-label="Камера"></button></div></div>
+      <p class="hint">Проверьте звук: полоска внизу показывает уровень микрофона, а рамка подсвечивается, когда вы говорите.</p>
+    </div>
+    <div class="act" id="act">
+      <h2 id="actt">Новая встреча</h2>
+      <p class="sub" id="acts">Создайте встречу и отправьте ссылку участникам. Ничего устанавливать не нужно, подключаться можно с телефона.</p>
+      <label class="lab" for="nm">Ваше имя на встрече</label>
+      <input id="nm" placeholder="Например, Анна Петрова" maxlength="40" autocomplete="name">
+      <button class="btn lg" id="mk">Создать встречу</button>
+      <button class="btn lg" id="ji">Войти во встречу</button>
+      <div class="sep"><span>или войдите по коду</span></div>
+      <div class="row"><input id="jc" placeholder="abc-defg-hij" autocapitalize="off" autocomplete="off" aria-label="Код встречи"><button class="btn ghost" id="jb">Войти</button></div>
+      <div class="err" id="lerr" role="alert"></div>
+      <ul class="feat" id="feat"></ul>
+    </div>
+  </main>
+</section>
+
+<section id="call" class="hide">
+  <div class="stage">
+    <div class="bar"><div class="logo"><b></b>SkillCall</div>
+      <button class="code" id="cp" title="Скопировать ссылку на встречу"><span id="rc"></span></button>
+      <div class="meta"><span id="cnt"></span><span id="tm"></span></div></div>
+    <div class="inv hide" id="inv"><div class="invt"><b>Пригласите участников</b><span>Отправьте ссылку: кто её откроет, сразу попадёт на встречу.</span><code id="invl"></code></div>
+      <div class="invb"><button class="btn" id="invc">Скопировать ссылку</button><button class="btn ghost hide" id="invs">Поделиться</button></div>
+      <button class="invx" id="invx" aria-label="Закрыть">×</button></div>
+    <div class="grid" id="grid"></div>
+    <div class="dock">
+      <button class="cb" id="bm" aria-label="Микрофон"></button>
+      <button class="cb" id="bc" aria-label="Камера"></button>
+      <button class="cb" id="bs" aria-label="Показать экран"></button>
+      <button class="cb" id="bh" aria-label="Поднять руку"></button>
+      <button class="cb" id="bt" aria-label="Чат"></button>
+      <button class="cb end" id="be" aria-label="Выйти из встречи"></button>
+    </div>
+  </div>
+  <aside class="chat hide" id="chat">
+    <h3>Чат встречи</h3>
+    <div class="msgs" id="msgs"></div>
+    <form class="send" id="sf"><input id="si" placeholder="Сообщение" autocomplete="off"><button class="btn" aria-label="Отправить"></button></form>
+  </aside>
+</section>
+
+<script type="module">
+let joinRoom, selfId;
+async function lib() {
+  if (joinRoom) return true;
+  for (const u of ['https://cdn.jsdelivr.net/npm/trystero@0.21.5/+esm', 'https://esm.sh/trystero@0.21.5', 'https://cdn.jsdelivr.net/npm/trystero/+esm']) {
+    try { ({joinRoom, selfId} = await import(u)); if (joinRoom) return true; } catch (e) { console.error('Не загрузилось:', u, e); } }
+  return false;
+}
+/* Регистрация: вставьте ключ anon public из Supabase (Project Settings → API). Адрес проекта определится сам; если ключ начинается с sb_publishable_, впишите ещё и SUPABASE_URL. Пока пусто, сайт работает без аккаунтов. */
+const SUPABASE_URL = 'https://ghnmhezasxjibtaigtxc.supabase.co', SUPABASE_KEY = 'sb_publishable_yTi9eKU-UTkzK47zAMjkaw_AY7UuNyJ';
+/* Для надёжной связи добавьте свой TURN-сервер (coturn) */
+const ICE = [{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}
+  /* ,{urls:"turn:turn.example.com:3478",username:"user",credential:"pass"} */];
+const $ = id => document.getElementById(id);
+const P = {mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>',
+ micoff:'<path d="M1 1l22 22"/><path d="M9 9v3a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.6"/><path d="M19 10v2a7 7 0 0 1-1.1 3.8M5 10v2a7 7 0 0 0 11.5 5.4M12 19v3"/>',
+ cam:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+ camoff:'<path d="M1 1l22 22"/><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.7 0H14a2 2 0 0 1 2 2v3.3l1 1L23 7v10"/>',
+ scr:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+ chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+ hand:'<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 0 1 4 0v6a8 8 0 0 1-8 8h-2c-2.5 0-4-1-5.7-2.7L3.4 15.4a2 2 0 0 1 3-2.6L8 14"/>',
+ end:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.800.7a2 2 0 0 1 1.700 2z"/>',
+ copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+ send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>'};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+const show = id => ['auth','lobby','call'].forEach(s => $(s).classList.toggle('hide', s !== id));
+const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 2200); };
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- иконки в кнопках ---------- */
+$('bs').innerHTML = ic('scr'); $('bh').innerHTML = ic('hand'); $('bt').innerHTML = ic('chat');
+$('be').innerHTML = ic('end'); $('cp').insertAdjacentHTML('afterbegin', ic('copy')); $('sf').querySelector('.btn').innerHTML = ic('send');
+
+/* ---------- лобби ---------- */
+let me = {uid: 'me', name: localStorage.name || ''}, local, micOn = true, camOn = true, room = null;
+$('nm').value = me.name;
+function paintCtl() { $('pm').innerHTML = ic(micOn ? 'mic' : 'micoff'); $('pc').innerHTML = ic(camOn ? 'cam' : 'camoff'); $('pm').classList.toggle('off', !micOn); $('pc').classList.toggle('off', !camOn);
+  $('bm').innerHTML = $('pm').innerHTML; $('bc').innerHTML = $('pc').innerHTML; $('bm').classList.toggle('off', !micOn); $('bc').classList.toggle('off', !camOn); }
+function applyTracks() { if (!local) return; local.getAudioTracks().forEach(t => t.enabled = micOn); local.getVideoTracks().forEach(t => t.enabled = camOn); }
+const toggleMic = () => { micOn = !micOn; applyTracks(); paintCtl(); sync({mic: micOn}); };
+const toggleCam = () => { camOn = !camOn; applyTracks(); paintCtl(); sync({cam: camOn}); };
+$('pm').onclick = $('bm').onclick = toggleMic; $('pc').onclick = $('bc').onclick = toggleCam;
+const rnd = n => Array.from({length: n}, () => 'abcdefghijkmnpqrstuvwxyz'[Math.random() * 24 | 0]).join('');
+$('mk').onclick = () => join(`${rnd(3)}-${rnd(4)}-${rnd(3)}`);
+$('jb').onclick = () => { const c = $('jc').value.trim().toLowerCase().replace(/.*room=/, ''); if (!/^[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(c)) return $('lerr').textContent = 'Код выглядит так: abc-defg-hij.'; join(c); };
+$('jc').onkeydown = e => e.key === 'Enter' && $('jb').click();
+
+/* ---------- встреча (без сервера: участники находят друг друга через публичные трекеры) ---------- */
+const roster = {}; let R, sSt, sCh, hand = false, sharing = null;
+const mine = () => roster[me.uid];
+function sync(d) { if (!room) return; Object.assign(mine(), d); sSt(mine()); paintTile(me.uid); }
+function tile(uid) { let t = $('t-' + uid); if (t) return t; t = document.createElement('div'); t.id = 't-' + uid; t.className = 'tile' + (uid === me.uid ? ' me' : '');
+  t.innerHTML = `<video autoplay playsinline ${uid === me.uid ? 'muted' : ''}></video><div class="av"><span></span></div><div class="nm"></div><div class="hd">${ic('hand')}</div>`; $('grid').append(t); layout(); return t; }
+function paintTile(uid) { const r = roster[uid] || {}, t = tile(uid), self = uid === me.uid;
+  t.querySelector('.nm').innerHTML = (r.mic === false ? ic('micoff') : '') + esc(self ? 'Вы' : (r.name || 'Участник')); t.querySelector('.av span').textContent = (r.name || '?')[0].toUpperCase();
+  t.classList.toggle('nocam', r.cam === false && !(self && sharing)); t.classList.toggle('hand', !!r.hand); }
+function addMsg(m) { const e = document.createElement('div'); e.className = 'm' + (m.self ? ' self' : '');
+  e.innerHTML = (m.self ? '' : `<b>${esc(m.name)}</b>`) + `<p>${esc(m.text)}</p>`; $('msgs').append(e); $('msgs').scrollTop = 1e9; }
+function drop(id) { delete roster[id]; const t = $('t-' + id); t && t.remove(); unwatch(id); layout(); }
+
+const meters = {}; let AC, clock, invClosed = false, INVITE = (() => { const c = (new URLSearchParams(location.search).get('room') || '').toLowerCase(); return /^[a-z]{3}-[a-z]{4}-[a-z]{3}$/.test(c) ? c : ''; })();
+const invLink = () => location.origin + location.pathname + '?room=' + room;
+const mq = matchMedia('(max-width:820px)');
+function layout() { const g = $('grid'), n = g.children.length; g.dataset.n = n;
+  g.style.setProperty('--c', mq.matches ? (n <= 2 ? 1 : 2) : (n <= 1 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4)); $('cnt').textContent = 'Участников: ' + n; $('inv').classList.toggle('hide', n > 1 || invClosed || !room); }
+mq.onchange = layout;
+function watch(stream, key, getEl = () => $('t-' + key)) {
+  unwatch(key); if (!stream.getAudioTracks().length) return;
+  AC = AC || new AudioContext(); const an = AC.createAnalyser(); an.fftSize = 256; AC.createMediaStreamSource(stream).connect(an); const buf = new Uint8Array(an.fftSize);
+  meters[key] = setInterval(() => { an.getByteTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v - 128)); const el = getEl(); if (el) { el.classList.toggle('talk', m > 12); if (key === 'pv') el.style.setProperty('--lvl', Math.min(1, m / 70)); } }, 150); }
+function unwatch(key) { clearInterval(meters[key]); delete meters[key]; }
+function startClock() { const t0 = Date.now(); clearInterval(clock); const f = () => { const s = (Date.now() - t0) / 1000 | 0, h = s / 3600 | 0;
+  $('tm').textContent = (h ? h + ':' : '') + String(s / 60 % 60 | 0).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }; f(); clock = setInterval(f, 1000); }
+function stopClock() { clearInterval(clock); }
+addEventListener('pointerdown', () => { AC && AC.state === 'suspended' && AC.resume(); document.querySelectorAll('video').forEach(v => v.paused && v.srcObject && v.play().catch(() => {})); });
+let joining = false;
+async function join(code) { if (room || joining) return; joining = true; try { await doJoin(code); } finally { joining = false; } }
+async function doJoin(code) {
+  const name = $('nm').value.trim(); if (!name) return $('lerr').textContent = 'Введите ваше имя.';
+  if (!local) await getMedia(); if (!local) return $('lerr').textContent = 'Разрешите доступ к камере и микрофону, чтобы войти во встречу.';
+  me.name = localStorage.name = name; $('lerr').textContent = 'Подключаемся…';
+  if (!(await lib())) return $('lerr').textContent = 'Не удалось загрузить модуль связи. Проверьте интернет, отключите VPN или блокировщик рекламы и обновите страницу.';
+  $('lerr').textContent = ''; me.uid = selfId; room = code;
+  R = joinRoom({appId: 'skillcall-v1-7c2e', rtcConfig: {iceServers: ICE}}, code);
+  const [st, gSt] = R.makeAction('state'), [ch, gCh] = R.makeAction('chat'); sSt = st; sCh = ch;
+  history.replaceState(null, '', '?room=' + code); $('rc').textContent = code; $('invl').textContent = invLink(); invClosed = false; show('call'); $('grid').innerHTML = '';
+  roster[me.uid] = {name, mic: micOn, cam: camOn}; tile(me.uid).querySelector('video').srcObject = local; paintTile(me.uid); watch(local, me.uid); startClock();
+  R.onPeerJoin(id => { roster[id] = roster[id] || {}; paintTile(id); R.addStream(local, id); sSt(mine(), id);
+    if (sharing && camTrack()) R.replaceTrack(camTrack(), sharing.getVideoTracks()[0], local, id); });
+  R.onPeerLeave(drop);
+  R.onPeerStream((s, id) => { const v = tile(id).querySelector('video'); if (v.srcObject !== s) { v.srcObject = s; watch(s, id); v.play().catch(() => toast('Нажмите на экран, чтобы включить звук')); } });
+  gSt((d, id) => { const r = roster[id] = roster[id] || {}, h = r.hand, first = !r.name; Object.assign(r, d); paintTile(id);
+    if (first && d.name) toast(d.name + ' подключился(лась)'); else if (d.hand && !h) toast(r.name + ' поднял(а) руку'); });
+  gCh((text, id) => { addMsg({name: (roster[id] || {}).name || 'Участник', text}); if ($('chat').classList.contains('hide')) { toast(((roster[id] || {}).name || 'Участник') + ': ' + text.slice(0, 40)); $('bt').classList.add('on'); } });
+}
+
+const camTrack = () => local.getVideoTracks()[0];
+$('bs').onclick = async () => {
+  if (sharing) return stopShare();
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) return toast('Показ экрана недоступен на телефоне и планшете: браузеры его не поддерживают. Откройте сайт на компьютере.');
+  if (!camTrack()) return toast('Для показа экрана нужна камера: включите её в настройках браузера.');
+  try { sharing = await navigator.mediaDevices.getDisplayMedia({video: true}); } catch (e) { if (e.name !== 'NotAllowedError') toast('Не удалось начать показ экрана.'); return; }
+  const tr = sharing.getVideoTracks()[0]; tr.onended = stopShare; R.replaceTrack(camTrack(), tr, local);
+  const v = tile(me.uid).querySelector('video'); v.srcObject = sharing; v.classList.add('scr'); tile(me.uid).classList.remove('nocam'); $('bs').classList.add('on'); };
+function stopShare() { if (!sharing) return; const tr = sharing.getVideoTracks()[0]; tr.onended = null; tr.stop(); sharing = null;
+  if (!room) return; R.replaceTrack(tr, camTrack(), local); const v = tile(me.uid).querySelector('video'); v.srcObject = local; v.classList.remove('scr'); paintTile(me.uid); $('bs').classList.remove('on'); }
+$('bh').onclick = () => { hand = !hand; $('bh').classList.toggle('on', hand); sync({hand}); };
+$('bt').onclick = () => { $('chat').classList.toggle('hide'); $('bt').classList.remove('on'); };
+$('sf').onsubmit = e => { e.preventDefault(); const text = $('si').value.trim().slice(0, 1000); if (!text) return; $('si').value = ''; sCh(text); addMsg({name: 'Вы', text, self: true}); };
+if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) $('bs').classList.add('dis');
+const copyLink = () => navigator.clipboard.writeText(invLink()).then(() => { toast('Ссылка скопирована'); return true; }, () => { toast('Ссылка: ' + invLink()); return false; });
+$('cp').onclick = copyLink;
+$('invc').onclick = async () => { if (await copyLink()) { $('invc').textContent = 'Скопировано'; setTimeout(() => $('invc').textContent = 'Скопировать ссылку', 2000); } };
+if (navigator.share) { $('invs').classList.remove('hide'); $('invs').onclick = () => navigator.share({title: 'Встреча SkillCall', text: 'Присоединяйтесь к встрече', url: invLink()}).catch(() => {}); }
+$('invx').onclick = () => { invClosed = true; layout(); };
+$('be').onclick = () => { if (!room) return; stopShare(); R.leave(); room = null; for (const k in roster) delete roster[k]; hand = false; $('bh').classList.remove('on');
+  $('msgs').innerHTML = ''; $('chat').classList.add('hide'); $('grid').innerHTML = ''; stopClock(); Object.keys(meters).forEach(unwatch); history.replaceState(null, '', location.pathname); INVITE = ''; $('act').classList.remove('invite'); $('actt').textContent = 'Новая встреча'; $('acts').textContent = ACTS; $('inv').classList.add('hide'); show('lobby'); };
+
+/* ---------- запуск ---------- */
+paintCtl();
+$('feat').innerHTML = [['scr', 'Показ экрана'], ['hand', 'Поднять руку'], ['chat', 'Чат встречи']].map(([i, t]) => `<li>${ic(i)}${t}</li>`).join('');
+document.querySelectorAll('.cb').forEach(b => b.title = b.getAttribute('aria-label'));
+const q = new URLSearchParams(location.search).get('room'); if (q) $('jc').value = q;
+$('pi').innerHTML = ic('cam'); $('pg').onclick = () => getMedia();
+function permFail(e) { const n = e && e.name || ''; $('perm').classList.remove('hide'); $('pg').textContent = 'Попробовать снова';
+  $('ph').textContent = n === 'NotAllowedError' || n === 'SecurityError' ? 'Доступ запрещён' : 'Не удалось включить камеру';
+  $('pt').textContent = '';
+  $('pe').textContent = typeof e === 'string' ? e
+    : n === 'NotAllowedError' || n === 'SecurityError' ? 'Нажмите на значок замка рядом с адресом сайта, включите камеру и микрофон, затем нажмите кнопку ниже.'
+    : n === 'NotFoundError' ? 'Камера и микрофон не найдены. Подключите устройство и нажмите кнопку ниже.'
+    : n === 'NotReadableError' ? 'Камеру или микрофон сейчас использует другое приложение. Закройте его и нажмите кнопку ниже.'
+    : 'Попробуйте обновить страницу.'; }
+let mediaP = null;
+function getMedia() { if (local) return Promise.resolve(); return mediaP || (mediaP = askMedia().finally(() => { mediaP = null; })); }
+async function askMedia() {
+  $('pe').textContent = '';
+  const md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia) { return permFail('Этот адрес или браузер не поддерживает камеру. Откройте сайт по ссылке с https:// в Chrome, Safari или Firefox.'); }
+  let err;
+  for (const c of [{video: {width: {ideal: 1280}, height: {ideal: 720}, facingMode: 'user'}, audio: {echoCancellation: true, noiseSuppression: true}}, {video: false, audio: true}, {video: true, audio: false}]) {
+    try { local = await md.getUserMedia(c); break; } catch (e) { err = e; if (e.name === 'NotAllowedError' || e.name === 'SecurityError') break; } }
+  if (!local) return permFail(err);
+  micOn = local.getAudioTracks().length > 0; camOn = local.getVideoTracks().length > 0;
+  $('perm').classList.add('hide'); $('pv').srcObject = local; applyTracks(); paintCtl(); watch(local, 'pv', () => document.querySelector('.prev'));
+  if (!camOn) toast('Камера не найдена: вы будете без видео.'); }
+addEventListener('focus', () => { if (!local && !$('lobby').classList.contains('hide')) getMedia(); });
+
+/* ---------- регистрация и вход (Supabase) ---------- */
+let sb = null, signup = false;
+function authMsg(m) { m = (m || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Неверная почта или пароль.';
+  if (m.includes('already') && m.includes('registered')) return 'Эта почта уже зарегистрирована. Откройте вкладку «Вход».';
+  if (m.includes('password should')) return 'Пароль слишком короткий: нужно минимум 6 символов.';
+  if (m.includes('not confirmed')) return 'Подтвердите почту: мы отправили вам письмо со ссылкой.';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Слишком много попыток. Подождите немного.';
+  if (m.includes('email')) return 'Проверьте адрес почты.';
+  if (m.includes('fetch') || m.includes('network')) return 'Нет связи с сервером. Проверьте интернет.';
+  return 'Не получилось: ' + m; }
+function mode(up) { signup = up; $('t-in').setAttribute('aria-selected', !up); $('t-up').setAttribute('aria-selected', up);
+  $('an').classList.toggle('hide', !up); $('ap').autocomplete = up ? 'new-password' : 'current-password';
+  $('at').textContent = up ? 'Регистрация' : 'Вход'; $('asub').textContent = up ? 'Создать аккаунт' : 'Войти'; $('aerr').textContent = ''; $('aerr').className = 'err'; }
+$('t-in').onclick = () => mode(false); $('t-up').onclick = () => mode(true);
+$('af').onsubmit = async e => { e.preventDefault(); const err = $('aerr'); err.className = 'err'; err.textContent = '';
+  const email = $('ae').value.trim(), pw = $('ap').value; $('asub').disabled = true;
+  try {
+    if (signup) {
+      const name = $('an').value.trim(); if (!name) { err.textContent = 'Введите ваше имя.'; return; }
+      const {data, error} = await sb.auth.signUp({email, password: pw, options: {data: {name}}}); if (error) throw error;
+      if (data.session) enterLobby(data.session.user);
+      else { mode(false); $('ae').value = email; err.className = 'err ok'; err.textContent = 'Аккаунт создан. Мы отправили письмо: перейдите по ссылке в нём и затем войдите.'; }
+    } else { const {data, error} = await sb.auth.signInWithPassword({email, password: pw}); if (error) throw error; enterLobby(data.user); }
+  } catch (x) { err.textContent = authMsg(x.message); } finally { $('asub').disabled = false; } };
+$('lout').onclick = async () => { if (room) $('be').click(); if (sb && !guest) await sb.auth.signOut();
+  if (local) { local.getTracks().forEach(t => t.stop()); local = null; } unwatch('pv'); $('pv').srcObject = null; $('perm').classList.remove('hide'); $('pg').textContent = 'Разрешить доступ';
+  $('ph').textContent = 'Разрешите доступ к камере и микрофону'; $('pe').textContent = ''; $('nm').readOnly = false; $('ap').value = ''; show('auth'); };
+const ACTS = $('acts').textContent; let guest = false;
+function enterLobby(u, real = true) {
+  const name = real ? ((u.user_metadata && u.user_metadata.name) || (u.email || '').split('@')[0]) : u.name, auth = !!SUPABASE_KEY, inv = !real && !!INVITE;
+  guest = !real; me.name = name || ''; $('nm').value = me.name; $('nm').readOnly = real && !!me.name;
+  $('who').classList.toggle('hide', !auth); $('tag').classList.toggle('hide', auth);
+  $('lname').textContent = real ? me.name : 'Гость'; $('lout').textContent = real ? 'Выйти' : 'Войти в аккаунт';
+  $('act').classList.toggle('invite', inv); $('actt').textContent = inv ? 'Вас пригласили на встречу' : 'Новая встреча'; $('acts').textContent = inv ? 'Введите имя и входите. Регистрация не нужна.' : ACTS;
+  if (INVITE) $('jc').value = INVITE;
+  show('lobby'); getMedia();
+  if (INVITE && !room && (real || me.name)) join(INVITE); }
+$('ag').onclick = () => enterLobby({name: localStorage.name || ''}, false);
+$('ji').onclick = () => join(INVITE);
+$('nm').onkeydown = e => { if (e.key === 'Enter' && INVITE && guest) $('ji').click(); };
+function keyInfo() { try { return JSON.parse(atob(SUPABASE_KEY.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { return {}; } }
+async function boot() {
+  const info = keyInfo(), url = SUPABASE_URL || (info.ref ? 'https://' + info.ref + '.supabase.co' : '');
+  if (!SUPABASE_KEY) return enterLobby({name: localStorage.name || ''}, false);
+  if (!url) { show('auth'); return $('aerr').textContent = 'Не указан адрес проекта: впишите его в SUPABASE_URL в начале скрипта (вид https://ВАШ-ID.supabase.co).'; }
+  if (info.role === 'service_role') { show('auth'); return $('aerr').textContent = 'Вставлен секретный ключ service_role. Его нельзя публиковать: возьмите ключ anon public.'; }
+  if (INVITE) { $('act').classList.add('invite'); $('actt').textContent = 'Вас пригласили на встречу'; $('acts').textContent = 'Введите имя и входите. Регистрация не нужна.'; $('nm').value = localStorage.name || ''; $('jc').value = INVITE; } else show('auth');
+  let mod;
+  for (const u of ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm', 'https://esm.sh/@supabase/supabase-js@2.45.4']) { try { mod = await import(u); break; } catch (e) { console.error('Не загрузилось:', u, e); } }
+  if (!mod) { if (INVITE) return enterLobby({name: localStorage.name || ''}, false); return $('aerr').textContent = 'Не удалось загрузить модуль входа. Проверьте интернет, отключите VPN или блокировщик и обновите страницу.'; }
+  sb = mod.createClient(url, SUPABASE_KEY);
+  const {data} = await sb.auth.getSession(); if (data.session) enterLobby(data.session.user); else if (INVITE) enterLobby({name: localStorage.name || ''}, false);
+}
+boot();
+</script>
+</body>
+</html>
