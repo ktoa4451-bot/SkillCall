@@ -5,12 +5,28 @@
   <style>
     body { font-family: sans-serif; text-align: center; padding: 50px; background: #f0f4f8; }
     h1 { color: #0070f3; }
-    button { padding: 15px 30px; font-size: 18px; background: #0070f3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    input { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; margin: 10px; }
+    button { padding: 12px 24px; font-size: 16px; background: #0070f3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    #result { margin-top: 20px; font-size: 20px; color: #333; }
   </style>
 </head>
 <body>
   <h1>SkillCall</h1>
-  <p>Видеозвонки без обрывов записи</p>
-  <button onclick="alert('Кнопка работает!')">Создать комнату</button>
+  <p>Введите имя:</p>
+  <input type="text" id="name" placeholder="Ваше имя">
+  <br>
+  <button onclick="sayHello()">Поздороваться</button>
+  <div id="result"></div>
+
+  <script>
+    function sayHello() {
+      const name = document.getElementById('name').value;
+      if (name === '') {
+        document.getElementById('result').textContent = 'Сначала введите имя!';
+      } else {
+        document.getElementById('result').textContent = 'Привет, ' + name + '!';
+      }
+    }
+  </script>
 </body>
 </html>
