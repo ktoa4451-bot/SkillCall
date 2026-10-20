@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1630">
+<script>try{const S=JSON.parse(localStorage.sc_settings||"{}"),h=document.documentElement,d=h.dataset;if(S.pal)d.pal=S.pal==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"night":"classic"):S.pal;if(S.anim)d.anim=S.anim;}catch(e){}</script>
+<title>SkillCall — видеозвонки для учёбы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&family=Comfortaa:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f6fb;--ink:#14213d;--mute:#5d6b86;--line:#dbe1ee;--blue:#3d3df5;--blue2:color-mix(in srgb,var(--blue) 78%,#000);--card:#fff;--soft:#eef1f8;--tr:20px;--cr:24px;--mark:#ffd23f;--bad:#d8344a;--night:#0b1228;--night2:#18234a;--night3:#27356b}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:Onest,system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+*{-webkit-tap-highlight-color:transparent}
+.tile,.dock,.prev,.chat h3{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.cb:focus:not(:focus-visible),.btn:focus:not(:focus-visible){outline:0}
+:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+.hide{display:none!important}
+.logo{font-weight:800;font-size:21px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+.logo b{width:13px;height:13px;border-radius:50%;background:var(--mark);box-shadow:0 0 0 3px rgba(255,210,63,.3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:700;background:var(--blue);color:#fff;transition:background .15s,transform .1s}
+.btn:hover{background:var(--blue2)}
+.btn:active{transform:scale(.98)}
+.btn.lg{padding:15px 24px;font-size:17px;border-radius:14px}
+.btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);transition:border-color .15s}
+input:focus{border-color:var(--blue);outline:0}
+.err{color:var(--bad);font-size:14px;min-height:21px}
+/* ---------- лобби ---------- */
+#lobby{min-height:100%;display:flex;flex-direction:column;background:var(--paper)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:20px 32px}
+.tag{color:var(--mute);font-size:14px}
+.lob{flex:1;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:56px;max-width:1180px;width:100%;margin:0 auto;padding:12px 32px 48px;align-items:center}
+.prev{position:relative;aspect-ratio:16/10;background:var(--night);border-radius:var(--tr);overflow:hidden;box-shadow:0 0 0 0 var(--mark);transition:box-shadow .15s}
+.prev.talk{box-shadow:0 0 0 4px var(--mark)}
+.prev video{width:100%;height:100%;object-fit:cover;transform:scaleX(var(--mir,-1))}
+.prev .ctl{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:center;gap:12px}
+.hint{color:var(--mute);font-size:14px;margin-top:14px;text-align:center}
+.act{display:grid;gap:14px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--cr);padding:32px}
+.act h2{font-size:clamp(30px,3.6vw,42px);line-height:1.05;font-weight:800;letter-spacing:-.025em}
+.sub{color:var(--mute);margin-bottom:6px}
+.lab{font-weight:700;font-size:14px;margin-bottom:-8px}
+.row{display:flex;gap:8px}
+.sep{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}
+.sep::before,.sep::after{content:"";flex:1;height:1px;background:var(--line)}
+.feat{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--mute);font-size:14px;padding-top:14px;border-top:1px solid var(--line)}
+.feat li{display:flex;align-items:center;gap:7px}
+.feat svg{width:17px;height:17px;color:var(--blue)}
+/* ---------- встреча ---------- */
+#call{height:100%;display:flex;background:var(--night);color:#fff;overflow:hidden}
+.stage{flex:1;display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top,0px));gap:12px}
+.code{display:flex;align-items:center;gap:8px;background:var(--night2);padding:8px 14px;border-radius:12px;font-weight:500;font-size:14px;transition:background .15s}
+.code:hover{background:var(--night3)}
+.meta{display:flex;gap:8px;font-size:14px;color:#aab6d6}
+.meta span{background:var(--night2);padding:8px 12px;border-radius:12px;font-variant-numeric:tabular-nums}
+.grid{flex:1;display:grid;gap:12px;padding:0 16px;grid-template-columns:repeat(var(--c,1),minmax(0,1fr));grid-auto-rows:minmax(0,1fr);min-height:0;overflow:auto;align-content:center}
+.grid[data-n="1"]{max-width:1000px;width:100%;margin:0 auto}
+.tile{position:relative;background:var(--night2);border-radius:var(--tr);overflow:hidden;min-height:150px;box-shadow:0 0 0 0 var(--mark);transition:box-shadow .15s}
+.tile.talk{box-shadow:0 0 0 4px var(--mark)}
+.tile video{width:100%;height:100%;object-fit:var(--fit,cover);background:#000}
+.tile.me video:not(.scr){transform:scaleX(var(--mir,-1))}
+.tile video.scr{object-fit:contain}
+.nm{position:absolute;left:12px;bottom:12px;background:rgba(11,18,40,.7);backdrop-filter:blur(8px);padding:4px 11px;border-radius:10px;font-size:13px;font-weight:500;display:flex;gap:6px;align-items:center}
+.nm svg{width:14px;height:14px;color:#ff7b8d}
+.av{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,var(--night3),var(--night2))}
+.tile.nocam .av{display:flex}
+.tile.nocam video{visibility:hidden}
+.av span{width:92px;height:92px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font-size:38px;font-weight:800}
+.hd{position:absolute;top:12px;right:12px;background:var(--mark);color:#14213d;border-radius:12px;padding:7px;display:none}
+.tile.hand .hd{display:block}
+.dock{display:flex;justify-content:center;gap:10px;margin:14px auto;margin-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding:10px 14px;background:rgba(24,35,74,.9);backdrop-filter:blur(12px);border-radius:32px;width:max-content;max-width:calc(100% - 24px)}
+.cb{width:52px;height:52px;border-radius:50%;background:var(--night3);color:#fff;display:grid;place-items:center;transition:background .15s,transform .1s}
+.cb:hover{background:#34458a}
+.cb:active{transform:scale(.94)}
+.cb.off{background:var(--bad)}
+.cb.on{background:var(--mark);color:#14213d}
+.cb.end{background:var(--bad);width:72px;border-radius:26px}
+.cb.end svg{transform:rotate(135deg)}
+.prev .cb{background:rgba(11,18,40,.75);backdrop-filter:blur(8px)}
+.prev .cb.off{background:var(--bad)}
+.chat{width:340px;background:var(--card);color:var(--ink);display:flex;flex-direction:column;margin:12px 12px 12px 0;border-radius:var(--cr);overflow:hidden}
+.chat h3{padding:16px 18px;border-bottom:1px solid var(--line)}
+.msgs{flex:1;overflow:auto;padding:14px;display:grid;gap:8px;align-content:start}
+.m{background:var(--soft);padding:8px 12px;border-radius:14px 14px 14px 4px;max-width:88%;justify-self:start}
+.m b{font-size:12px;color:var(--blue);display:block}
+.m p{word-break:break-word}
+.m.self{justify-self:end;background:var(--blue);color:#fff;border-radius:14px 14px 4px 14px}
+.send{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.send .btn{padding:10px 14px}
+.toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);background:#14213d;color:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.15);padding:10px 16px;border-radius:12px;font-size:14px;z-index:9;max-width:90%}
+
+.hero{font-size:clamp(34px,4.4vw,56px);line-height:1.02;font-weight:800;letter-spacing:-.03em;margin-bottom:22px;max-width:11em}
+.perm{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;background:radial-gradient(circle at 50% 30%,var(--night3),var(--night));color:#fff;z-index:2}
+.perm>div{max-width:370px;display:grid;gap:12px;justify-items:center}
+.perm h3{font-size:22px;line-height:1.2}
+.perm p{color:#aab6d6;font-size:15px}
+.perm .pe{color:#ffb4bf}
+.pi{width:64px;height:64px;border-radius:50%;background:var(--blue);display:grid;place-items:center}
+.pi svg{width:28px;height:28px}
+.prev::after{content:"";position:absolute;left:20px;right:20px;bottom:0;height:5px;border-radius:5px 5px 0 0;background:var(--mark);transform:scaleX(var(--lvl,0));transform-origin:left;transition:transform .12s}
+.tile.in{animation:pop .3s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+.stage{background:radial-gradient(900px 520px at 50% -8%,#1a2a5e,transparent 70%)}
+
+#auth{min-height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.ahero{background:radial-gradient(700px 420px at 20% 0,#1d2f6b,var(--night) 70%);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:36px}
+.ahero h1{font-size:clamp(34px,4.6vw,56px);line-height:1.04;font-weight:800;letter-spacing:-.03em;max-width:10em}
+.ahero p{color:#aab6d6;max-width:28em;margin-top:16px}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:400px}
+.mini div{aspect-ratio:4/3;border-radius:14px;background:var(--night2);position:relative}
+.mini div:nth-child(2){box-shadow:0 0 0 3px var(--mark)}
+.mini div::after{content:"";position:absolute;left:50%;top:36%;width:30%;aspect-ratio:1;border-radius:50%;background:var(--night3);transform:translateX(-50%)}
+.abox{display:flex;align-items:center;justify-content:center;padding:32px;background:var(--paper)}
+.acard{width:100%;max-width:400px;display:grid;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:var(--cr);padding:30px}
+.acard h2{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.tabs{display:flex;gap:4px;background:var(--soft);border-radius:12px;padding:4px}
+.tabs button{flex:1;padding:9px;border-radius:9px;font-weight:700;color:var(--mute);transition:background .15s}
+.tabs button[aria-selected=true]{background:var(--card);color:var(--ink)}
+.err.ok{color:#1a7f4b}
+.who{display:flex;align-items:center;gap:12px;font-weight:500}
+.gh{color:var(--mute);font-size:13px;text-align:center}
+#ji{display:none}
+.act.invite #ji{display:inline-flex}
+.act.invite #mk,.act.invite .sep,.act.invite .row{display:none}
+.cb.dis{opacity:.45}
+.inv{margin:0 16px 12px;background:var(--night2);border-radius:var(--cr);padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;position:relative}
+.invt{flex:1;min-width:220px;display:grid;gap:2px;padding-right:24px}
+.invt span{color:#aab6d6;font-size:14px}
+.invt code{font-family:inherit;background:var(--night);padding:6px 10px;border-radius:10px;font-size:13px;overflow-wrap:anywhere;margin-top:6px;user-select:text;-webkit-user-select:text}
+.invb{display:flex;gap:8px;flex-wrap:wrap}
+.invx{position:absolute;top:6px;right:10px;font-size:22px;line-height:1;color:#aab6d6;padding:6px 8px}
+@media(max-width:820px){
+#auth{grid-template-columns:1fr}.ahero{padding:24px;gap:20px}.mini{display:none}.abox{padding:20px 16px}.acard{padding:22px}.who #lname{display:none}
+.lob{grid-template-columns:1fr;gap:20px;padding:0 16px 32px}.top{padding:16px}.tag{display:none}
+.prev{aspect-ratio:4/3;border-radius:var(--tr)}.act{padding:22px;border-radius:var(--cr)}
+.chat{position:fixed;inset:0;width:100%;margin:0;border-radius:0;z-index:5}
+.cb{width:46px;height:46px}.cb.end{width:60px}.dock{gap:6px;padding:8px 10px}
+.meta #tm{display:none}.tile{min-height:120px}
+}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+@keyframes bump{40%{transform:scale(1.14)}}
+@keyframes ring{0%,100%{box-shadow:0 0 0 4px var(--mark)}50%{box-shadow:0 0 0 8px rgba(255,210,63,.45)}}
+@keyframes wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg)}75%{transform:rotate(14deg)}}
+@keyframes out{to{opacity:0;transform:scale(.9)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}}
+@keyframes toastOut{to{opacity:0;transform:translate(-50%,10px)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 3px rgba(255,210,63,.3)}50%{box-shadow:0 0 0 8px rgba(255,210,63,0)}}
+@keyframes float{50%{transform:translateY(-8px)}}
+@keyframes pulse{50%{transform:scale(1.08)}}
+section:not(.hide){animation:fade .4s ease-out}
+.hero{animation:rise .6s both}
+.act>*{animation:rise .55s both}
+.act>:nth-child(1){animation-delay:.05s}.act>:nth-child(2){animation-delay:.1s}.act>:nth-child(3){animation-delay:.15s}.act>:nth-child(4){animation-delay:.2s}.act>:nth-child(5){animation-delay:.25s}.act>:nth-child(6){animation-delay:.3s}.act>:nth-child(7){animation-delay:.35s}.act>:nth-child(8){animation-delay:.4s}.act>:nth-child(9){animation-delay:.45s}
+.logo b{animation:beat 2.6s ease-in-out infinite}
+.mini div{animation:float 4.5s ease-in-out infinite}
+.mini div:nth-child(2){animation:float 4.5s -1.5s ease-in-out infinite,ring 1.4s ease-in-out infinite}
+.mini div:nth-child(3){animation-delay:-3s}
+.pi{animation:pulse 2s ease-in-out infinite}
+.toast{animation:toastIn .25s ease-out}
+.chat:not(.hide){animation:rise .3s ease-out}
+.m{animation:rise .25s ease-out}
+.inv:not(.hide){animation:rise .4s ease-out}
+#call:not(.hide) .dock{animation:rise .5s .1s both}
+.cb.on,.cb.off{animation:bump .3s}
+.prev.talk,.tile.talk{animation:ring 1.2s ease-in-out infinite}
+.tile.hand .hd svg{transform-origin:70% 90%;animation:wave 1.4s ease-in-out infinite}
+.tile.out{animation:out .22s forwards;pointer-events:none}
+@media(hover:hover){.btn:hover{transform:translateY(-1px)}.cb:hover{transform:translateY(-2px)}}
+.btn:active{transform:scale(.97)}
+.cb:active{transform:scale(.92)}
+/* ---------- усиленные анимации ---------- */
+:root{--spring:cubic-bezier(.2,1.5,.4,1)}
+@keyframes fade{from{opacity:0;transform:translateY(32px) scale(.97)}}
+@keyframes rise{from{opacity:0;transform:translateY(34px) scale(.95)}}
+@keyframes pop{from{opacity:0;transform:scale(.55) rotate(-4deg)}}
+@keyframes out{to{opacity:0;transform:scale(.5) rotate(5deg)}}
+@keyframes bump{35%{transform:scale(1.35)}65%{transform:scale(.88)}}
+@keyframes ring{0%,100%{box-shadow:0 0 0 4px var(--mark),0 0 0 4px rgba(255,210,63,.6)}50%{box-shadow:0 0 0 4px var(--mark),0 0 0 18px rgba(255,210,63,0)}}
+@keyframes wave{0%,100%{transform:rotate(0)}25%{transform:rotate(-24deg)}75%{transform:rotate(24deg)}}
+@keyframes beat{0%,100%{box-shadow:0 0 0 3px rgba(255,210,63,.35)}50%{box-shadow:0 0 0 14px rgba(255,210,63,0)}}
+@keyframes float{50%{transform:translateY(-14px) rotate(1.5deg)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,50px) scale(.85)}}
+@keyframes word{from{opacity:0;transform:translateY(46px) rotate(5deg)}}
+@keyframes fromL{from{opacity:0;transform:translateX(-70px)}}
+@keyframes fromR{from{opacity:0;transform:translateX(70px)}}
+@keyframes bounce{from{opacity:0;transform:translateY(60px) scale(.4)}}
+@keyframes badge{from{opacity:0;transform:scale(0) rotate(-40deg)}}
+@keyframes talkpulse{50%{transform:scale(1.14)}}
+@keyframes msgL{from{opacity:0;transform:translateX(-30px) scale(.85)}}
+@keyframes msgR{from{opacity:0;transform:translateX(30px) scale(.85)}}
+@keyframes slideR{from{opacity:0;transform:translateX(80px)}}
+@keyframes dropIn{from{opacity:0;transform:translateY(-36px) scale(.96)}}
+@keyframes cta{0%,100%{box-shadow:0 0 0 0 rgba(61,61,245,.5)}60%{box-shadow:0 0 0 14px rgba(61,61,245,0)}}
+#auth,#lobby{overflow:hidden}
+#lobby,#call{position:relative}
+.top,.lob,.stage,.chat{z-index:1}
+.top,.lob{position:relative}
+section:not(.hide){animation:fade .6s var(--spring)}
+.hero{animation:none}
+.hero span,.ahero h1 span{display:inline-block;animation:word .8s var(--spring) backwards;animation-delay:calc(var(--i)*.1s + .1s)}
+.lob>div:first-child{animation:fromL .9s var(--spring) backwards}
+.act{animation:fromR .9s .1s var(--spring) backwards}
+.act>*{animation:rise .7s var(--spring) backwards}
+#mk{animation:rise .7s .25s var(--spring) backwards,cta 2.4s 1.4s ease-in-out infinite}
+.logo b{animation:beat 2.2s ease-in-out infinite}
+.nm{transition:transform .2s}
+.tile.in{animation:pop .55s var(--spring)}
+.tile.out{animation:out .25s ease-in forwards;pointer-events:none}
+.tile.talk .nm{transform:scale(1.08);transform-origin:left bottom}
+.tile.talk.nocam .av span{animation:talkpulse .7s ease-in-out infinite}
+.tile.hand .hd{animation:badge .7s var(--spring)}
+#call:not(.hide) .dock{animation:rise .6s .1s var(--spring) backwards}
+#call.enter .dock .cb{animation:bounce .7s var(--spring) backwards}
+#call.enter .dock .cb:nth-child(1){animation-delay:.2s}#call.enter .dock .cb:nth-child(2){animation-delay:.28s}#call.enter .dock .cb:nth-child(3){animation-delay:.36s}#call.enter .dock .cb:nth-child(4){animation-delay:.44s}#call.enter .dock .cb:nth-child(5){animation-delay:.52s}#call.enter .dock .cb:nth-child(6){animation-delay:.6s}
+.m{animation:msgL .4s var(--spring)}
+.m.self{animation:msgR .4s var(--spring)}
+.chat:not(.hide){animation:slideR .45s var(--spring)}
+.inv:not(.hide){animation:dropIn .55s var(--spring)}
+.btn{position:relative;overflow:hidden}
+.btn:not(.ghost)::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.4) 50%,transparent 65%);transform:translateX(-130%);pointer-events:none}
+@media(hover:hover){.btn:hover{transform:translateY(-3px)}.btn:not(.ghost):hover::after{transform:translateX(130%);transition:transform .7s}.cb:hover{transform:translateY(-4px) scale(1.08)}}
+.btn:active{transform:scale(.96)}
+.cb:active{transform:scale(.9)}
+.btn.ok{background:#1a7f4b;animation:bump .45s}
+/* ---------- кастомизация ---------- */
+[data-pal=night]{--paper:#0b1228;--ink:#eef1fb;--mute:#9aa7c7;--line:#27356b;--card:#141f42;--soft:#1f2c58}
+[data-pal=forest]{--paper:#eef6f1;--ink:#10281f;--mute:#4f6b5e;--line:#cfe3d7;--blue:#1f9d6b;--night:#07201a;--night2:#0f3a2d;--night3:#1b5a45;--soft:#e2efe7}
+[data-pal=sunset]{--paper:#fff4ee;--ink:#3a1420;--mute:#8a5a5f;--line:#f1d6cb;--blue:#e8503a;--mark:#ffc857;--night:#240c1c;--night2:#401830;--night3:#63264a;--soft:#fbe6dc}
+[data-pal=mono]{--paper:#fff;--ink:#000;--mute:#444;--line:#000;--blue:#111;--mark:#ffe600;--night:#000;--night2:#1a1a1a;--night3:#383838;--soft:#eee}
+[data-anim=off] *,[data-anim=off] *::before,[data-anim=off] *::after{animation:none!important;transition:none!important}
+[data-anim=soft]{--spring:cubic-bezier(.25,.8,.3,1)}
+[data-names=false] .nm{display:none}
+[data-meta=false] .meta{display:none}
+[data-self=false] .tile.me{display:none}
+.tile{cursor:pointer}
+.grid[data-pin="1"]{grid-template-columns:minmax(0,1fr) 220px;grid-template-rows:repeat(var(--n,1),minmax(0,1fr))}
+.grid[data-pin="1"] .tile.pin{grid-column:1;grid-row:1/-1}
+#call.enter .dock .cb:nth-child(7){animation-delay:.68s}#call.enter .dock .cb:nth-child(8){animation-delay:.76s}
+.scrim{position:fixed;inset:0;background:rgba(5,10,25,.5);z-index:19;animation:fadeo .2s}
+@keyframes fadeo{from{opacity:0}}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--card);color:var(--ink);z-index:20;display:flex;flex-direction:column;border-left:1.5px solid var(--line);animation:slideR .4s var(--spring)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+.dh h3{font-size:20px}
+.dh .invx{position:static;color:var(--mute);font-size:28px}
+.db{flex:1;overflow:auto;padding:4px 20px 20px}
+.db h4{margin:22px 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.ctl2{display:grid;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ctl2>span{font-weight:500;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips button{padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);font-size:14px;font-weight:500;display:flex;align-items:center;gap:7px;color:var(--ink);transition:border-color .15s,background .15s}
+.chips button[aria-pressed=true]{border-color:var(--blue);background:var(--soft)}
+.chips i{width:12px;height:12px;border-radius:50%;display:inline-block;box-shadow:0 0 0 1px rgba(128,128,128,.4)}
+.swr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px;font-weight:500}
+.swr input{appearance:none;-webkit-appearance:none;width:46px;height:27px;padding:0;border-radius:99px;background:var(--line);border:0;position:relative;transition:background .2s;cursor:pointer;flex:none}
+.swr input::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:transform .25s var(--spring)}
+.swr input:checked{background:var(--blue)}
+.swr input:checked::after{transform:translateX(19px)}
+.ctl2 input[type=range]{padding:0;height:28px;border:0;accent-color:var(--blue);background:none}
+.ctl2 select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit}
+.df{padding:14px 20px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.topr{display:flex;align-items:center;gap:14px}
+.gearbtn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--card);color:var(--ink);transition:transform .4s var(--spring)}
+.gearbtn:hover{transform:rotate(90deg)}
+.abox{position:relative}
+.abox .gearbtn{position:absolute;top:16px;right:16px}
+@media(max-width:820px){.grid[data-pin="1"]{grid-template-columns:repeat(var(--c,1),minmax(0,1fr));grid-template-rows:none}.grid[data-pin="1"] .tile.pin{grid-column:auto;grid-row:auto}.dock{flex-wrap:wrap}.cb{width:42px;height:42px}.cb.end{width:56px}}
+/* ---------- расположение кнопок и раздел «Что добавили» ---------- */
+.dock .cb.end{order:99}
+.ordp{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:10px;border-radius:14px;background:var(--night2)}
+.ordp i{width:34px;height:34px;border-radius:50%;background:var(--night3);color:#fff;display:grid;place-items:center;font-style:normal}
+.ordp i.e{background:var(--bad)}
+.ordp svg{width:17px;height:17px}
+.ord{list-style:none;padding:0;display:grid;gap:6px}
+.ord li,.ordl{display:flex;align-items:center;gap:10px;padding:7px 8px;border:1.5px solid var(--line);border-radius:12px;background:var(--card)}
+.ord li b,.ordl b{flex:1;font-weight:500;font-size:15px;min-width:0}
+.ord li i,.ordl i{width:30px;height:30px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-style:normal;flex:none}
+.ord li i svg,.ordl i svg{width:16px;height:16px}
+.ord .gr{touch-action:none;cursor:grab;color:var(--mute);width:28px;height:36px;display:grid;place-items:center;flex:none;border-radius:8px}
+.ord .gr svg{width:18px;height:18px}
+.ord .mv{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink);flex:none;transition:background .15s}
+.ord .mv:hover:not(:disabled){background:var(--soft)}
+.ord .mv:disabled{opacity:.25;cursor:default}
+.ord .mv svg{width:18px;height:18px}
+.ord li.drag{border-color:var(--blue);box-shadow:0 8px 22px rgba(0,0,0,.2);position:relative;z-index:2}
+.ordl{border-style:dashed;opacity:.85}
+.ordl em{font-style:normal;color:var(--mute);font-size:13px;text-align:right}
+.nbtn{position:relative}
+.nbtn:hover{transform:scale(1.08)}
+.nbtn.new::after{content:"";position:absolute;top:0;right:0;width:11px;height:11px;border-radius:50%;background:var(--mark);box-shadow:0 0 0 2px var(--card)}
+.abox .nbtn{right:66px}
+.nrow{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:13px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--soft);text-align:left;color:var(--ink);transition:border-color .15s}
+.nrow:hover{border-color:var(--blue)}
+.nrow svg{color:var(--blue)}
+.nrow span{font-weight:700}
+.nrow em{margin-left:auto;font-style:normal;color:var(--mute);font-size:13px}
+.wd{font-weight:400;letter-spacing:0;text-transform:none;margin-left:8px}
+.wi{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px;animation:rise .4s var(--spring) backwards}
+.wi p{flex:1;min-width:0}
+.tg{flex:none;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-top:2px;color:#fff;background:var(--blue);white-space:nowrap}
+.tg.fix{background:#1a7f4b}
+.tg.ui{background:var(--mark);color:#14213d}
+.wempty{color:var(--mute);padding:18px 0;text-align:center}
+@media(max-width:820px){.abox .nbtn{right:62px}.wi{flex-direction:column;gap:4px}}
+@media(max-width:820px){.bar{padding-left:14px;padding-right:14px}.bar .logo{display:none}.code{white-space:nowrap}.meta{white-space:nowrap;gap:6px;margin-left:auto}.meta span{padding:7px 10px;font-size:13px}.meta #hb{font-size:0}.meta #hb::before{content:"★";font-size:14px}}
+/* ---------- электронная доска ---------- */
+.wb{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:0 16px}
+.wb:not(.hide){animation:rise .35s var(--spring) backwards}
+.wbt{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:center;background:var(--night2);border-radius:14px;padding:8px 10px}
+.wbg{display:flex;gap:6px;align-items:center}
+.wbb{min-width:40px;height:40px;border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--night3);padding:0 8px;font-size:13px;font-weight:700;transition:background .15s,transform .1s}
+.wbb svg{width:19px;height:19px}
+.wbb:hover:not(:disabled){background:#34458a}
+.wbb:active:not(:disabled){transform:scale(.92)}
+.wbb[aria-pressed=true]{background:var(--mark);color:#14213d}
+.wbb:disabled,.wbsw:disabled,.wbcc:disabled,.wbwl input:disabled{opacity:.35;pointer-events:none}
+.wbb.wide{padding:0 12px}
+.wbsw{width:30px;height:30px;border-radius:50%;border:2px solid var(--night2);box-shadow:0 0 0 1.5px rgba(255,255,255,.35);flex:none;transition:transform .12s}
+.wbsw[aria-pressed=true]{box-shadow:0 0 0 3px var(--mark);transform:scale(1.12)}
+.wbcc{width:34px;height:34px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+.wbwl input{width:110px;padding:0;border:0;background:none;accent-color:var(--mark);height:34px}
+.wbdot{display:block;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px rgba(255,255,255,.4)}
+.wbc{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden}
+.wbs{position:relative;background:#fff;border-radius:calc(var(--tr)*.6);overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35);flex:none}
+.wbs canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;-webkit-user-select:none;user-select:none}
+.wbi{position:absolute;min-width:90px;max-width:80%;background:rgba(255,255,255,.92);border:0;outline:1.5px dashed var(--blue);border-radius:4px;padding:0;margin:0;line-height:1.1;font-weight:600;color:#111}
+.wbn{color:#aab6d6;font-size:13px;text-align:center;min-height:0}
+.wbn:empty{display:none}
+.cb.ping{box-shadow:0 0 0 3px var(--mark)}
+#call.wbon .grid{display:flex!important;flex:none!important;height:78px;gap:8px;padding:0 16px;overflow-x:auto;overflow-y:hidden;max-width:none!important;width:auto!important;margin:0!important;align-content:stretch}
+#call.wbon .grid .tile{flex:none;width:104px;min-height:0!important;height:78px;grid-column:auto!important;grid-row:auto!important}
+#call.wbon .inv{display:none}
+#call.wbon .nm{font-size:11px;padding:2px 7px;left:6px;bottom:6px}
+#call.wbon .av span{width:40px;height:40px;font-size:17px}
+#call.enter .dock .cb:nth-child(9){animation-delay:.76s}
+@media(pointer:coarse){.wbsw{width:34px;height:34px}.wbb{min-width:42px;height:42px}}
+@media(max-width:820px){.wb{padding:0 10px}.wbt{order:2;gap:6px 10px;padding:6px 8px}.wbwl input{width:90px}#call.wbon .grid{height:64px;padding:0 10px}#call.wbon .grid .tile{width:86px;height:64px}}
+/* ---------- занятие: опросы, руки, реакции, журнал ---------- */
+.dock .cb{position:relative}
+.cb[data-n]::after{content:attr(data-n);position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--mark);color:#14213d;font-size:11px;font-weight:800;display:grid;place-items:center}
+.ltabs{padding:12px 20px 0}
+.pform{display:grid;gap:8px;padding:12px 0 4px}
+.pform input[type=text]{padding:11px 12px}
+.prow{display:flex;gap:6px;align-items:center}
+.prow .mv{width:36px;height:36px;border-radius:9px;font-size:22px;line-height:1;color:var(--mute);flex:none}
+.pc{border:1.5px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;background:var(--card);display:grid;gap:8px}
+.pch{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.pch b{font-size:16px;line-height:1.3;min-width:0;word-break:break-word}
+.tg.off{background:#64748b}
+.popt{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--soft);color:var(--ink);font-weight:500;transition:border-color .15s,background .15s}
+.popt:hover:not(:disabled){border-color:var(--blue)}
+.popt:disabled{opacity:.55}
+.pbar{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;padding:8px 12px;border-radius:10px;background:var(--soft);overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--blue);opacity:.28;transition:width .5s var(--spring)}
+.pbar span,.pbar b{position:relative;min-width:0;word-break:break-word}
+.pbar b{font-size:13px;white-space:nowrap}
+.pbar.mine{outline:2px solid var(--blue)}
+.who2{display:grid;gap:4px;padding-top:4px}
+.rpop{position:fixed;left:50%;transform:translateX(-50%);z-index:9;background:var(--night2);border-radius:18px;padding:8px;display:flex;gap:4px;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.rpop:not(.hide){animation:rise .25s var(--spring) backwards}
+.rpop button{font-size:26px;line-height:1;width:46px;height:46px;border-radius:12px;transition:background .15s,transform .1s}
+.rpop button:hover{background:var(--night3)}
+.rpop button:active{transform:scale(.88)}
+#rfx{position:fixed;inset:0;pointer-events:none;z-index:8;overflow:hidden}
+.rx{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);animation:rxup 2.8s ease-out forwards}
+.rx span{font-size:34px;line-height:1}
+.rx em{font-style:normal;font-size:11px;background:rgba(11,18,40,.78);color:#fff;border-radius:8px;padding:1px 7px;margin-top:2px;white-space:nowrap}
+@keyframes rxup{0%{opacity:0;transform:translate(-50%,-60%) scale(.5)}12%{opacity:1;transform:translate(-50%,-100%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-440%) scale(1)}}
+#call.enter .dock .cb:nth-child(10),#call.enter .dock .cb:nth-child(11){animation-delay:.84s}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- расширенная кастомизация ---------- */
+:root{--ff:Onest,system-ui,sans-serif;--dk:1;--gap:12px;--veil:.5;--bgblur:0px}
+body{font-family:var(--ff)}
+[data-pal=ocean]{--paper:#eaf6fb;--ink:#0b2a3a;--mute:#4d6f80;--line:#c6e1ec;--blue:#0e8fc4;--night:#05202e;--night2:#0b3a52;--night3:#14607f;--soft:#dcedf4}
+[data-pal=rose]{--paper:#fff0f5;--ink:#3b1226;--mute:#8a5570;--line:#f3cfdd;--blue:#d6336c;--mark:#ffd166;--night:#2a0b1b;--night2:#481530;--night3:#6d2248;--soft:#fbe0ea}
+[data-pal=lavender]{--paper:#f3f0ff;--ink:#241a4a;--mute:#6a5f94;--line:#ddd5f7;--blue:#7048e8;--night:#150d33;--night2:#271a5a;--night3:#40308a;--soft:#e8e2fb}
+[data-pal=graphite]{--paper:#121212;--ink:#f2f2f2;--mute:#a0a0a0;--line:#2e2e2e;--card:#1c1c1c;--soft:#262626;--blue:#4c8dff;--night:#0a0a0a;--night2:#1c1c1c;--night3:#333}
+/* фон: фото или градиент */
+#bgphoto{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;display:none}
+[data-photo=on] #bgphoto{display:block}
+#bgimg{position:absolute;inset:calc(var(--bgblur)*-2);background:center/cover no-repeat;filter:blur(var(--bgblur))}
+#bgveil{position:absolute;inset:0;background:var(--paper);opacity:var(--veil)}
+[data-screen=call] #bgveil{background:var(--night)}
+[data-photo=on] #lobby,[data-photo=on] .abox,[data-photo=on] #call{background:transparent}
+[data-photo=on] .stage{background:none}
+[data-photo=on] .ahero{background:rgba(11,18,40,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+[data-photo=on] .act,[data-photo=on] .acard,[data-photo=on] .chat{background:color-mix(in srgb,var(--card) 80%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2)}
+[data-photo=on] .hint,[data-photo=on] .tag{color:var(--ink)}
+[data-photo=on] .hero,[data-photo=on] .hint,[data-photo=on] .tag,[data-photo=on] .logo{text-shadow:0 1px 12px color-mix(in srgb,var(--paper) 90%,transparent)}
+[data-screen=call][data-photo=on] .logo{text-shadow:none}
+/* кнопки, плитки */
+.cb{width:calc(52px*var(--dk));height:calc(52px*var(--dk))}
+.cb.end{width:calc(72px*var(--dk))}
+.cb svg.i{width:calc(20px*var(--dk));height:calc(20px*var(--dk))}
+.grid{gap:var(--gap)}
+[data-btn=square] .cb,[data-btn=square] .cb.end{border-radius:calc(var(--tr)*.7)}
+[data-btn=square] .dock{border-radius:var(--cr)}
+@media(max-width:820px){.cb{width:calc(42px*var(--dk));height:calc(42px*var(--dk))}.cb.end{width:calc(56px*var(--dk))}}
+/* элементы панели настроек */
+.ctl2>span[data-v]::after{content:" · " attr(data-v) attr(data-u);color:var(--mute);font-weight:400}
+.phth{aspect-ratio:16/9;border-radius:14px;border:2px dashed var(--line);background:var(--soft) center/cover no-repeat;display:grid;place-items:center;text-align:center;padding:10px;color:var(--mute);font-size:14px;cursor:pointer;transition:border-color .15s}
+.phth:hover,.phth.dz{border-color:var(--blue)}
+.btn:disabled,input:disabled{opacity:.5;cursor:not-allowed}
+.pl{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px;font-weight:500}
+.pl>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:10px;flex:none}
+.btn.bad{background:var(--bad);color:#fff}
+.btn.bad:hover{background:color-mix(in srgb,var(--bad) 80%,#000)}
+.rnote{color:var(--mute);font-size:13px;padding-top:12px}
+.rbtns{display:grid;gap:8px;padding-top:14px}
+</style>
+</head>
+<body>
+<div id="bgphoto" aria-hidden="true"><div id="bgimg"></div><div id="bgveil"></div></div>
+
+<section id="auth" class="hide">
+  <div class="ahero">
+    <div class="logo"><b></b>SkillCall</div>
+    <div><h1>Войдите, чтобы начать занятие</h1><p>Один аккаунт для всех встреч: создавайте комнаты, приглашайте группу и подключайтесь с телефона или компьютера.</p></div>
+    <div class="mini"><div></div><div></div><div></div></div>
+  </div>
+  <div class="abox">
+    <button class="gearbtn nbtn" data-news aria-label="Что добавили" title="Что добавили"></button>
+    <button class="gearbtn" data-settings aria-label="Настройки"></button>
+    <form class="acard" id="af" novalidate>
+      <h2 id="at">Вход</h2>
+      <div class="tabs" role="tablist"><button type="button" role="tab" id="t-in" aria-selected="true">Вход</button><button type="button" role="tab" id="t-up" aria-selected="false">Регистрация</button></div>
+      <input id="an" placeholder="Ваше имя" autocomplete="name" maxlength="40" class="hide">
+      <input id="ae" type="email" placeholder="Электронная почта" autocomplete="email" required>
+      <input id="ap" type="password" placeholder="Пароль (минимум 6 символов)" autocomplete="current-password" required>
+      <div class="err" id="aerr" role="alert"></div>
+      <button class="btn lg" id="asub">Войти</button>
+      <div class="sep"><span>или</span></div>
+      <button type="button" class="btn ghost" id="ag">Продолжить как гость</button>
+      <p class="gh">Без регистрации: нужно только имя.</p>
+    </form>
+  </div>
+</section>
+
+<section id="lobby">
+  <header class="top"><div class="logo"><b></b>SkillCall</div><div class="topr"><span class="tag" id="tag">Видеозвонки для учёбы</span><div class="who hide" id="who"><span id="lname"></span><button class="btn ghost" id="lout" style="padding:8px 14px">Выйти</button></div><button class="gearbtn nbtn" data-news aria-label="Что добавили" title="Что добавили"></button><button class="gearbtn" data-settings aria-label="Настройки"></button></div></header>
+  <main class="lob">
+    <div>
+      <h1 class="hero">Занятие начинается по ссылке</h1>
+      <div class="prev"><video id="pv" autoplay muted playsinline></video>
+        <div class="perm" id="perm"><div><div class="pi" id="pi"></div><h3 id="ph">Разрешите доступ к камере и микрофону</h3>
+          <p id="pt">Сейчас браузер покажет запрос. Нажмите «Разрешить», чтобы вас было видно и слышно.</p>
+          <button class="btn" id="pg">Разрешить доступ</button><p class="pe" id="pe" role="alert"></p></div></div>
+        <div class="ctl"><button class="cb" id="pm" aria-label="Микрофон"></button><button class="cb" id="pc" aria-label="Камера"></button></div></div>
+      <p class="hint">Проверьте звук: полоска внизу показывает уровень микрофона, а рамка подсвечивается, когда вы говорите.</p>
+    </div>
+    <div class="act" id="act">
+      <h2 id="actt">Новая встреча</h2>
+      <p class="sub" id="acts">Создайте встречу и отправьте ссылку участникам. Ничего устанавливать не нужно, подключаться можно с телефона.</p>
+      <label class="lab" for="nm">Ваше имя на встрече</label>
+      <input id="nm" placeholder="Например, Анна Петрова" maxlength="40" autocomplete="name">
+      <button class="btn lg" id="mk">Создать встречу</button>
+      <button class="btn lg" id="ji">Войти во встречу</button>
+      <div class="sep"><span>или войдите по коду</span></div>
+      <div class="row"><input id="jc" placeholder="abc-defg-hij" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Код встречи"><button class="btn ghost" id="jb">Войти</button></div>
+      <div class="err" id="lerr" role="alert"></div>
+      <ul class="feat" id="feat"></ul>
+    </div>
+  </main>
+</section>
+
+<section id="call" class="hide">
+  <div class="stage">
+    <div class="bar"><div class="logo"><b></b>SkillCall</div>
+      <button class="code" id="cp" title="Скопировать ссылку на встречу"><span id="rc"></span></button>
+      <div class="meta"><span id="hb" class="hide">★ Организатор</span><span id="cnt"></span><span id="tm"></span></div></div>
+    <div class="inv hide" id="inv"><div class="invt"><b>Пригласите участников</b><span>Отправьте ссылку: кто её откроет, сразу попадёт на встречу.</span><code id="invl"></code></div>
+      <div class="invb"><button class="btn" id="invc">Скопировать ссылку</button><button class="btn ghost hide" id="invs">Поделиться</button></div>
+      <button class="invx" id="invx" aria-label="Закрыть">×</button></div>
+    <div class="grid" id="grid"></div>
+    <section class="wb hide" id="wb" aria-label="Электронная доска">
+      <div class="wbt">
+        <div class="wbg" id="wbtools" role="group" aria-label="Инструменты"></div>
+        <div class="wbg" id="wbcols" role="group" aria-label="Цвет"></div>
+        <label class="wbg wbwl" title="Толщина линии"><i class="wbdot" id="wbwv"></i><input type="range" id="wbw" min="1" max="24" value="4" aria-label="Толщина линии"></label>
+        <div class="wbg">
+          <button class="wbb" id="wbundo" aria-label="Отменить последний штрих" title="Отменить последний штрих"></button>
+          <button class="wbb wide hide" id="wbdraw" aria-pressed="false" aria-label="Разрешить рисовать всем участникам" title="Разрешить рисовать всем участникам"></button>
+          <button class="wbb hide" id="wbclr" aria-label="Очистить доску для всех" title="Очистить доску для всех"></button>
+          <button class="wbb" id="wbx" aria-label="Закрыть доску" title="Закрыть доску"></button>
+        </div>
+      </div>
+      <div class="wbc" id="wbc"><div class="wbs" id="wbs"><canvas id="wbcv" width="800" height="600"></canvas><input class="wbi hide" id="wbi" maxlength="120" aria-label="Текст на доске" autocomplete="off"></div><p class="wbn" id="wbn"></p></div>
+    </section>
+    <div class="dock">
+      <button class="cb" id="bm" aria-label="Микрофон"></button>
+      <button class="cb" id="bc" aria-label="Камера"></button>
+      <button class="cb" id="bs" aria-label="Показать экран"></button>
+      <button class="cb" id="bh" aria-label="Поднять руку"></button>
+      <button class="cb" id="bt" aria-label="Чат"></button>
+      <button class="cb" id="bw" aria-label="Электронная доска" title="Электронная доска"></button>
+      <button class="cb" id="bz" aria-label="Реакции" title="Реакции"></button>
+      <button class="cb" id="bl" aria-label="Опросы, руки и журнал" title="Опросы, руки и журнал"></button>
+      <button class="cb" id="bset" data-settings aria-label="Настройки"></button>
+      <button class="cb hide" id="br" aria-label="Настройки комнаты"></button>
+      <button class="cb end" id="be" aria-label="Выйти из встречи"></button>
+    </div>
+  </div>
+  <aside class="chat hide" id="chat">
+    <h3>Чат встречи</h3>
+    <div class="msgs" id="msgs"></div>
+    <form class="send" id="sf"><input id="si" placeholder="Сообщение" autocomplete="off"><button class="btn" aria-label="Отправить"></button></form>
+  </aside>
+</section>
+
+<div class="scrim hide" id="scrim"></div>
+<aside class="drawer hide" id="drawer" role="dialog" aria-label="Настройки">
+  <div class="dh"><h3>Настройки</h3><button class="invx" id="dx" aria-label="Закрыть">×</button></div>
+  <div class="db" id="db"></div>
+  <div class="df"><button class="btn ghost" id="dreset" style="width:100%">Сбросить всё</button></div>
+</aside>
+<aside class="drawer hide" id="rdrawer" role="dialog" aria-label="Настройки комнаты">
+  <div class="dh"><h3>Настройки комнаты</h3><button class="invx" id="rx" aria-label="Закрыть">×</button></div>
+  <div class="db" id="rb"></div>
+</aside>
+<aside class="drawer hide" id="ldrawer" role="dialog" aria-label="Занятие">
+  <div class="dh"><h3>Занятие</h3><button class="invx" id="lx" aria-label="Закрыть">×</button></div>
+  <div class="chips ltabs" id="ltabs" role="tablist"></div>
+  <div class="db" id="lb"></div>
+</aside>
+<div class="rpop hide" id="rpop" role="menu" aria-label="Реакции"></div>
+<div id="rfx" aria-hidden="true"></div>
+<aside class="drawer hide" id="ndrawer" role="dialog" aria-label="Что добавили">
+  <div class="dh"><h3>Что добавили</h3><button class="invx" id="nx" aria-label="Закрыть">×</button></div>
+  <div class="db" id="nb"></div>
+</aside>
+
+<script type="module">
+let joinRoom, selfId;
+async function lib() {
+  if (joinRoom) return true;
+  for (const u of ['https://cdn.jsdelivr.net/npm/trystero@0.21.5/+esm', 'https://esm.sh/trystero@0.21.5', 'https://cdn.jsdelivr.net/npm/trystero/+esm']) {
+    try { ({joinRoom, selfId} = await import(u)); if (joinRoom) return true; } catch (e) { console.error('Не загрузилось:', u, e); } }
+  return false;
+}
+/* Регистрация: вставьте ключ anon public из Supabase (Project Settings → API). Адрес проекта определится сам; если ключ начинается с sb_publishable_, впишите ещё и SUPABASE_URL. Пока пусто, сайт работает без аккаунтов. */
+const SUPABASE_URL = 'https://ghnmhezasxjibtaigtxc.supabase.co', SUPABASE_KEY = 'sb_publishable_yTi9eKU-UTkzK47zAMjkaw_AY7UuNyJ';
+/* Для надёжной связи добавьте свой TURN-сервер (coturn) */
+const ICE = [{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}
+  /* ,{urls:"turn:turn.example.com:3478",username:"user",credential:"pass"} */];
+const $ = id => document.getElementById(id);
+const P = {mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/>',
+ micoff:'<path d="M1 1l22 22"/><path d="M9 9v3a3 3 0 0 0 5.1 2.1M15 9.3V5a3 3 0 0 0-5.9-.6"/><path d="M19 10v2a7 7 0 0 1-1.1 3.8M5 10v2a7 7 0 0 0 11.5 5.4M12 19v3"/>',
+ cam:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+ camoff:'<path d="M1 1l22 22"/><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.7 0H14a2 2 0 0 1 2 2v3.3l1 1L23 7v10"/>',
+ scr:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
+ chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+ hand:'<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 0 1 4 0v6a8 8 0 0 1-8 8h-2c-2.5 0-4-1-5.7-2.7L3.4 15.4a2 2 0 0 1 3-2.6L8 14"/>',
+ end:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.800.7a2 2 0 0 1 1.700 2z"/>',
+ copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+ send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>'};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+const show = id => { ['auth','lobby','call'].forEach(s => $(s).classList.toggle('hide', s !== id)); document.documentElement.dataset.screen = id; updBg(); };
+const toast = t => { document.querySelectorAll('.toast').forEach(x => x.remove()); const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.append(d);
+  setTimeout(() => { d.style.animation = 'toastOut .25s forwards'; setTimeout(() => d.remove(), 250); }, 2000); };
+const esc = s => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- иконки в кнопках ---------- */
+P.room = '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'; $('br').innerHTML = ic('room');
+$('bs').innerHTML = ic('scr'); $('bh').innerHTML = ic('hand'); $('bt').innerHTML = ic('chat');
+$('be').innerHTML = ic('end'); $('cp').insertAdjacentHTML('afterbegin', ic('copy')); $('sf').querySelector('.btn').innerHTML = ic('send');
+
+/* ---------- лобби ---------- */
+let me = {uid: 'me', name: localStorage.name || ''}, local, micOn = true, camOn = true, room = null;
+$('nm').value = me.name;
+/* права и настройки комнаты: управляет организатор (создатель) */
+const RS0 = {lock: false, max: 0, chat: true, share: true, mic: true, cam: true, draw: false, react: true, log: true};
+let RS = {...RS0}, hostId = null, sRm = null; const rejected = new Set();
+let wbItems = [], wbVis = false, wbTool = 'pen', wbColor = '#111827', wbWidth = 4, wbCur = null, wbSent = 0, wbTimer = 0, sBd = null, sPl = null, sRx = null, ATT = [], POLLS = []; /* состояние доски объявлено здесь: настройки комнаты вызываются при запуске */
+const isHost = () => !!room && hostId === me.uid;
+const canMic = () => isHost() || RS.mic, canCam = () => isHost() || RS.cam, canChat = () => isHost() || RS.chat, canShare = () => isHost() || RS.share, canDraw = () => !hostId || isHost() || RS.draw, canReact = () => isHost() || RS.react;
+const OWN = () => { try { return JSON.parse(localStorage.sc_own || '[]'); } catch { return []; } };
+const remember = c => { try { localStorage.sc_own = JSON.stringify([c, ...OWN().filter(x => x !== c)].slice(0, 20)); } catch {} };
+function paintCtl() { $('pm').innerHTML = ic(micOn ? 'mic' : 'micoff'); $('pc').innerHTML = ic(camOn ? 'cam' : 'camoff'); $('pm').classList.toggle('off', !micOn); $('pc').classList.toggle('off', !camOn);
+  $('bm').innerHTML = $('pm').innerHTML; $('bc').innerHTML = $('pc').innerHTML; $('bm').classList.toggle('off', !micOn); $('bc').classList.toggle('off', !camOn); }
+function applyTracks() { if (!local) return; local.getAudioTracks().forEach(t => t.enabled = micOn); local.getVideoTracks().forEach(t => t.enabled = camOn); }
+const toggleMic = async () => {
+  if (!local) return getMedia();
+  if (room && !micOn && !canMic()) return toast('Организатор отключил микрофоны участников.');
+  if (!local.getAudioTracks().length) return switchDevice('audio', S.mic);
+  micOn = !micOn; applyTracks(); paintCtl(); sync({mic: micOn}); };
+const toggleCam = async () => {
+  if (!local) return getMedia();
+  if (room && !camOn && !canCam()) return toast('Организатор отключил камеры участников.');
+  if (!local.getVideoTracks().length) return switchDevice('video', S.cam);
+  camOn = !camOn; applyTracks(); paintCtl(); sync({cam: camOn}); };
+$('pm').onclick = $('bm').onclick = toggleMic; $('pc').onclick = $('bc').onclick = toggleCam;
+const rnd = n => Array.from({length: n}, () => 'abcdefghijkmnpqrstuvwxyz'[Math.random() * 24 | 0]).join('');
+/* код комнаты: принимает русскую раскладку, пробелы, заглавные буквы и целую ссылку */
+const CYR = {й:'q',ц:'w',у:'e',к:'r',е:'t',н:'y',г:'u',ш:'i',щ:'o',з:'p',ф:'a',ы:'s',в:'d',а:'f',п:'g',р:'h',о:'j',л:'k',д:'l',я:'z',ч:'x',с:'c',м:'v',и:'b',т:'n',ь:'m'};
+const lat = s => String(s || '').toLowerCase().replace(/[а-яё]/g, ch => CYR[ch] || '');
+const parseCode = s => { s = lat(s); const m = s.match(/room=([^&#\s]+)/); if (m) s = m[1]; const l = s.replace(/[^a-z]/g, ''); return l.length === 10 ? `${l.slice(0, 3)}-${l.slice(3, 7)}-${l.slice(7)}` : ''; };
+const fmtCode = s => { s = lat(s); if (/[\/:?=]/.test(s)) return parseCode(s) || s; const l = s.replace(/[^a-z]/g, '').slice(0, 10); return l.slice(0, 3) + (l.length > 3 ? '-' + l.slice(3, 7) : '') + (l.length > 7 ? '-' + l.slice(7) : ''); };
+$('mk').onclick = () => join(`${rnd(3)}-${rnd(4)}-${rnd(3)}`, true);
+$('jc').oninput = () => { const v = fmtCode($('jc').value); if (v !== $('jc').value) $('jc').value = v; $('lerr').textContent = ''; };
+$('jb').onclick = () => { const c = parseCode($('jc').value); if (!c) return $('lerr').textContent = 'Код состоит из 10 латинских букв, например abc-defg-hij. Можно вставить и целую ссылку.'; $('jc').value = c; join(c); };
+$('jc').onkeydown = e => e.key === 'Enter' && $('jb').click();
+
+/* ---------- встреча (без сервера: участники находят друг друга через публичные трекеры) ---------- */
+const roster = {}; let R, sSt, sCh, hand = false, sharing = null;
+const mine = () => roster[me.uid];
+function sync(d) { if (!room) return; if (d.hand) d.handAt = Date.now(); Object.assign(mine(), d); sSt(mine()); paintTile(me.uid); paintLive(); }
+function tile(uid) { let t = $('t-' + uid); if (t) return t; t = document.createElement('div'); t.id = 't-' + uid; t.className = 'tile in' + (uid === me.uid ? ' me' : ''); t.title = 'Нажмите, чтобы закрепить'; t.addEventListener('click', () => { const was = t.classList.contains('pin'); $('grid').querySelectorAll('.pin').forEach(x => x.classList.remove('pin')); if (!was) t.classList.add('pin'); layout(); }); t.addEventListener('animationend', e => { if (e.animationName === 'pop') t.classList.remove('in'); });
+  t.innerHTML = `<video autoplay playsinline ${uid === me.uid ? 'muted' : ''}></video><div class="av"><span></span></div><div class="nm"></div><div class="hd">${ic('hand')}</div>`; if (uid === me.uid) t.querySelector('video').muted = true; $('grid').append(t); layout(); return t; }
+function paintTile(uid) { const r = roster[uid] || {}, t = tile(uid), self = uid === me.uid;
+  t.querySelector('.nm').innerHTML = (r.mic === false ? ic('micoff') : '') + esc(self ? 'Вы' : (r.name || 'Участник')) + (uid === hostId ? ' <span title="Организатор">★</span>' : ''); t.querySelector('.av span').textContent = (r.name || '?')[0].toUpperCase();
+  t.classList.toggle('nocam', r.cam === false && !(self && sharing)); t.classList.toggle('hand', !!r.hand); }
+function addMsg(m) { const e = document.createElement('div'); e.className = 'm' + (m.self ? ' self' : '');
+  e.innerHTML = (m.self ? '' : `<b>${esc(m.name)}</b>`) + `<p>${esc(m.text)}</p>`; $('msgs').append(e); $('msgs').scrollTop = 1e9; }
+function drop(id) { attOut(id); if (room) beep(420, .15); delete roster[id]; rejected.delete(id);
+  if (id === hostId) { hostId = null; RS = {...RS0}; applyRoom(); paintHost(); notify('Организатор покинул встречу: ограничения сняты.'); } const t = $('t-' + id); unwatch(id); if (t) { t.id = ''; t.classList.add('out'); setTimeout(() => { t.remove(); layout(); }, 220); } else layout(); }
+
+const meters = {}; let AC, clock, invClosed = false, INVITE = parseCode(new URLSearchParams(location.search).get('room'));
+const invLink = () => location.origin + location.pathname + '?room=' + room;
+const mq = matchMedia('(max-width:820px)');
+function layout() { const g = $('grid'), n = g.children.length; g.dataset.n = n; const pin = g.querySelector('.tile.pin:not(.out)'); g.dataset.pin = pin ? 1 : 0; g.style.setProperty('--n', Math.max(1, n - 1));
+  g.style.setProperty('--c', mq.matches ? (n <= 2 ? 1 : 2) : (n <= 1 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4)); $('cnt').textContent = 'Участников: ' + n; $('inv').classList.toggle('hide', n > 1 || invClosed || !room); if (!$('rdrawer').classList.contains('hide')) renderRoom(); }
+mq.onchange = layout;
+function watch(stream, key, getEl = () => $('t-' + key)) {
+  unwatch(key); if (!stream.getAudioTracks().length) return;
+  AC = AC || new AudioContext(); const an = AC.createAnalyser(); an.fftSize = 256; AC.createMediaStreamSource(stream).connect(an); const buf = new Uint8Array(an.fftSize);
+  meters[key] = setInterval(() => { an.getByteTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v - 128)); const el = getEl(); if (el) { el.classList.toggle('talk', m > 12); if (key === 'pv') el.style.setProperty('--lvl', Math.min(1, m / 70)); } }, 150); }
+function unwatch(key) { clearInterval(meters[key]); delete meters[key]; }
+function startClock() { const t0 = Date.now(); clearInterval(clock); const f = () => { const s = (Date.now() - t0) / 1000 | 0, h = s / 3600 | 0;
+  $('tm').textContent = (h ? h + ':' : '') + String(s / 60 % 60 | 0).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }; f(); clock = setInterval(f, 1000); }
+function stopClock() { clearInterval(clock); }
+addEventListener('pointerdown', () => { AC && AC.state === 'suspended' && AC.resume(); document.querySelectorAll('video').forEach(v => v.paused && v.srcObject && v.play().catch(() => {})); });
+let joining = false;
+async function join(code, created = false) { if (room || joining) return; joining = true; try { await doJoin(code, created); } finally { joining = false; } }
+async function doJoin(code, created) {
+  const name = $('nm').value.trim(); if (!name) return $('lerr').textContent = 'Введите ваше имя.';
+  if (!local) await getMedia();
+  if (!local && lastErr && lastErr.name === 'NotFoundError') { local = new MediaStream(); micOn = camOn = false; paintCtl(); toast('Камера и микрофон не найдены: вы входите без них.'); }
+  if (!local) return $('lerr').textContent = 'Разрешите доступ к камере и микрофону, чтобы войти во встречу.';
+  me.name = localStorage.name = name; $('lerr').textContent = 'Подключаемся…';
+  if (!(await lib())) return $('lerr').textContent = 'Не удалось загрузить модуль связи. Проверьте интернет, отключите VPN или блокировщик рекламы и обновите страницу.';
+  $('lerr').textContent = ''; me.uid = selfId; room = code; RS = {...RS0}; rejected.clear(); hostId = (created || OWN().includes(code)) ? me.uid : null; if (hostId) remember(code);
+  R = joinRoom({appId: 'skillcall-v1-7c2e', rtcConfig: {iceServers: ICE}}, code);
+  const [st, gSt] = R.makeAction('state'), [ch, gCh] = R.makeAction('chat'), [rm, gRm] = R.makeAction('room'), [bd, gBd] = R.makeAction('board'), [pl, gPl] = R.makeAction('poll'), [rx, gRx] = R.makeAction('react'); sSt = st; sCh = ch; sRm = rm; sBd = bd; gBd(wbRecv); sPl = pl; sRx = rx; gPl(plRecv); gRx(rxRecv);
+  history.replaceState(null, '', '?room=' + code); $('rc').textContent = code; $('invl').textContent = invLink(); invClosed = false; show('call'); $('call').classList.add('enter'); setTimeout(() => $('call').classList.remove('enter'), 1500); $('grid').innerHTML = '';
+  roster[me.uid] = {name, mic: micOn, cam: camOn}; tile(me.uid).querySelector('video').srcObject = local; paintTile(me.uid); watch(local, me.uid); startClock(); paintHost(); applyRoom(); if (isHost()) hostStart();
+  R.onPeerJoin(id => {
+    if (isHost()) {
+      const full = RS.max && Object.keys(roster).filter(k => !rejected.has(k)).length >= RS.max;
+      if (RS.lock || full) { rejected.add(id); sRm({host: true, kick: RS.lock ? 'locked' : 'full'}, id); return; }
+      sRm({host: true, set: RS}, id); wbSnap(id); plSnap(id); }
+    roster[id] = roster[id] || {}; paintTile(id); R.addStream(local, id); sSt(mine(), id);
+    if (sharing && camTrack()) R.replaceTrack(camTrack(), sharing.getVideoTracks()[0], local, id); });
+  R.onPeerLeave(drop);
+  R.onPeerStream((s, id) => { if (rejected.has(id)) return; const v = tile(id).querySelector('video'); if (v.srcObject !== s) { v.srcObject = s; watch(s, id); applySink(v); v.play().catch(() => toast('Нажмите на экран, чтобы включить звук')); } });
+  gSt((d, id) => { if (rejected.has(id)) return; const r = roster[id] = roster[id] || {}, h = r.hand, first = !r.name; Object.assign(r, d); if (r.hand && !h) r.handAt = Date.now(); if (first && d.name) attIn(id, d.name); paintTile(id); paintLive();
+    if (first && d.name) { notify(d.name + ' подключился(лась)'); beep(880); } else if (d.hand && !h) { notify(r.name + ' поднял(а) руку'); beep(1100, .18); } });
+  gCh((text, id) => { if (rejected.has(id) || (id !== hostId && !RS.chat)) return; addMsg({name: (roster[id] || {}).name || 'Участник', text}); if ($('chat').classList.contains('hide')) { notify(((roster[id] || {}).name || 'Участник') + ': ' + text.slice(0, 40)); beep(700, .1); $('bt').classList.add('on'); } });
+  gRm((d, id) => { if (!d || typeof d !== 'object') return;
+    if (d.host && !hostId) { hostId = id; paintHost(); }
+    if (id !== hostId) return;
+    if (d.set) { RS = cleanRS(d.set); applyRoom(); if (RS.log && !logNoted) { logNoted = true; toast('Организатор ведёт журнал посещаемости: имя, время входа и выхода.'); } }
+    if (d.kick) return leaveRoom(KICK[d.kick] || KICK.removed);
+    if (d.end) return leaveRoom('Организатор завершил встречу.');
+    if (d.lower && hand) { hand = false; $('bh').classList.remove('on'); sync({hand: false}); notify('Организатор опустил вашу руку.'); }
+    if (d.mute && micOn) { micOn = false; applyTracks(); paintCtl(); sync({mic: false}); notify('Организатор выключил ваш микрофон.'); } });
+  if (!hostId) setTimeout(() => { if (room === code && Object.keys(roster).length <= 1) toast('В комнате пока никого нет. Проверьте код: он должен совпадать с кодом организатора.'); }, 15000);
+}
+
+const camTrack = () => local.getVideoTracks()[0];
+$('bs').onclick = async () => {
+  if (sharing) return stopShare();
+  if (!canShare()) return toast('Организатор запретил показ экрана.');
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) return toast('Показ экрана недоступен на телефоне и планшете: браузеры его не поддерживают. Откройте сайт на компьютере.');
+  if (!camTrack()) return toast('Для показа экрана нужна камера: включите её в настройках браузера.');
+  try { sharing = await navigator.mediaDevices.getDisplayMedia({video: true}); } catch (e) { if (e.name !== 'NotAllowedError') toast('Не удалось начать показ экрана.'); return; }
+  const tr = sharing.getVideoTracks()[0]; tr.onended = stopShare; R.replaceTrack(camTrack(), tr, local);
+  const v = tile(me.uid).querySelector('video'); v.srcObject = sharing; v.classList.add('scr'); tile(me.uid).classList.remove('nocam'); $('bs').classList.add('on'); };
+function stopShare() { if (!sharing) return; const tr = sharing.getVideoTracks()[0]; tr.onended = null; tr.stop(); sharing = null;
+  if (!room) return; R.replaceTrack(tr, camTrack(), local); const v = tile(me.uid).querySelector('video'); v.srcObject = local; v.classList.remove('scr'); paintTile(me.uid); $('bs').classList.remove('on'); }
+$('bh').onclick = () => { hand = !hand; $('bh').classList.toggle('on', hand); sync({hand}); };
+$('bt').onclick = () => { $('chat').classList.toggle('hide'); $('bt').classList.remove('on'); };
+$('sf').onsubmit = e => { e.preventDefault(); const text = $('si').value.trim().slice(0, 1000); if (!text) return; if (!canChat()) return toast('Организатор отключил чат.'); $('si').value = ''; sCh(text); addMsg({name: 'Вы', text, self: true}); };
+const shareOk = !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia); applyRoom();
+const copyLink = () => navigator.clipboard.writeText(invLink()).then(() => { toast('Ссылка скопирована'); return true; }, () => { toast('Ссылка: ' + invLink()); return false; });
+$('cp').onclick = copyLink;
+$('invc').onclick = async () => { if (await copyLink()) { $('invc').textContent = 'Скопировано'; $('invc').classList.add('ok'); setTimeout(() => { $('invc').textContent = 'Скопировать ссылку'; $('invc').classList.remove('ok'); }, 2000); } };
+if (navigator.share) { $('invs').classList.remove('hide'); $('invs').onclick = () => navigator.share({title: 'Встреча SkillCall', text: 'Присоединяйтесь к встрече', url: invLink()}).catch(() => {}); }
+$('invx').onclick = () => { invClosed = true; layout(); };
+/* ---------- настройки комнаты (только организатор) ---------- */
+const KICK = {locked: 'Организатор закрыл комнату для новых участников.', full: 'В комнате достигнут лимит участников.', removed: 'Организатор удалил вас из встречи.'};
+const cleanRS = o => { const r = {...RS0}; if (o && typeof o === 'object') for (const k in RS0) if (typeof o[k] === typeof RS0[k]) r[k] = o[k]; r.max = Math.max(0, Math.min(100, r.max | 0)); return r; };
+function paintHost() { const h = isHost(); $('br').classList.toggle('hide', !h); $('hb').classList.toggle('hide', !h);
+  if (!h && !$('rdrawer').classList.contains('hide')) closeSettings(); Object.keys(roster).forEach(paintTile); }
+function applyRoom() {
+  if (room && !isHost()) {
+    if (!RS.mic && micOn) { micOn = false; applyTracks(); paintCtl(); sync({mic: false}); notify('Организатор отключил микрофоны участников.'); }
+    if (!RS.cam && camOn) { camOn = false; applyTracks(); paintCtl(); sync({cam: false}); notify('Организатор отключил камеры участников.'); }
+    if (!RS.share && sharing) { stopShare(); notify('Организатор запретил показ экрана.'); } }
+  const ch = canChat(); $('si').disabled = !ch; $('si').placeholder = ch ? 'Сообщение' : 'Чат отключён организатором'; $('sf').querySelector('.btn').disabled = !ch;
+  $('bs').classList.toggle('dis', !shareOk || !canShare()); wbPerm(); paintLive(); }
+function setRoom(k, v) { if (!isHost()) return; RS[k] = v; sRm({set: RS}); if (k === 'log' && v) Object.keys(roster).forEach(id => roster[id].name && attIn(id, roster[id].name)); renderRoom(); applyRoom(); }
+function kickPeer(id) { sRm({kick: 'removed'}, id); drop(id); rejected.add(id); }
+function renderRoom() {
+  const box = $('rb'), st = box.scrollTop; box.innerHTML = '';
+  const head = t => { const e = document.createElement('h4'); e.textContent = t; box.append(e); };
+  const sw = (k, l) => { const e = document.createElement('div'); e.className = 'swr'; e.innerHTML = `<span>${l}</span><input type="checkbox" role="switch" ${RS[k] ? 'checked' : ''}>`; e.querySelector('input').onchange = ev => setRoom(k, ev.target.checked); box.append(e); };
+  const btn = (t, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ' + cls; b.textContent = t; b.onclick = fn; return b; };
+  head('Доступ');
+  sw('lock', 'Закрыть комнату для новых участников');
+  const lim = document.createElement('div'), chips = document.createElement('div'); lim.className = 'ctl2'; lim.innerHTML = '<span>Лимит участников</span>'; chips.className = 'chips';
+  for (const [v, n] of [[0, 'Без лимита'], [2, '2'], [5, '5'], [10, '10'], [25, '25']]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', String(RS.max === v)); b.onclick = () => setRoom('max', v); chips.append(b); }
+  lim.append(chips); box.append(lim);
+  head('Что разрешено участникам');
+  sw('chat', 'Писать в чат'); sw('share', 'Показывать экран'); sw('mic', 'Включать микрофон'); sw('cam', 'Включать камеру'); sw('draw', 'Рисовать на доске'); sw('react', 'Отправлять реакции'); head('Журнал посещаемости'); sw('log', 'Вести журнал (имя, время входа и выхода)');
+  head('Участники');
+  const others = Object.keys(roster).filter(k => k !== me.uid);
+  if (!others.length) { const p = document.createElement('p'); p.className = 'rnote'; p.textContent = 'Пока никого, кроме вас.'; box.append(p); }
+  for (const id of others) { const r = document.createElement('div'); r.className = 'pl'; r.innerHTML = `<span>${esc(roster[id].name || 'Участник')}</span>`; r.append(btn('Удалить', 'ghost sm', () => kickPeer(id))); box.append(r); }
+  const c = document.createElement('div'); c.className = 'pl'; c.innerHTML = `<span>Код: ${esc(room || '')}</span>`; c.append(btn('Копировать ссылку', 'ghost sm', copyLink)); box.append(c);
+  const bs = document.createElement('div'); bs.className = 'rbtns';
+  bs.append(btn('Выключить микрофоны всем', 'ghost', () => { sRm({mute: true}); toast('Микрофоны участников выключены.'); }),
+    btn('Завершить встречу для всех', 'bad', () => { if (!confirm('Завершить встречу для всех участников?')) return; sRm({end: true}); setTimeout(() => leaveRoom(), 300); }));
+  box.append(bs);
+  const n = document.createElement('p'); n.className = 'rnote'; n.textContent = 'Встреча идёт напрямую между участниками, без сервера, поэтому ограничения применяются на устройствах участников. Если организатор выйдет, ограничения снимутся.'; box.append(n);
+  box.scrollTop = st; }
+function leaveRoom(msg) { if (!room) return; hostStop(); stopShare(); try { R.leave(); } catch {} room = null; hostId = null; RS = {...RS0}; rejected.clear(); sSt = sCh = sRm = sBd = sPl = sRx = null; wbReset(); liveReset();
+  for (const k in roster) delete roster[k]; hand = false; $('bh').classList.remove('on');
+  $('msgs').innerHTML = ''; $('chat').classList.add('hide'); $('bt').classList.remove('on'); $('grid').innerHTML = ''; stopClock(); Object.keys(meters).forEach(unwatch); history.replaceState(null, '', location.pathname); INVITE = ''; $('act').classList.remove('invite'); $('actt').textContent = 'Новая встреча'; $('acts').textContent = ACTS; $('inv').classList.add('hide');
+  closeSettings(); paintHost(); applyRoom(); if (local && !local.getTracks().length) local = null;
+  if (local) watch(local, 'pv', () => document.querySelector('.prev'));
+  show('lobby'); $('lerr').textContent = msg || ''; if (msg) toast(msg); }
+$('be').onclick = () => leaveRoom();
+$('br').onclick = () => { if (!isHost()) return; $('drawer').classList.add('hide'); renderRoom(); $('scrim').classList.remove('hide'); $('rdrawer').classList.remove('hide'); };
+
+/* ---------- электронная доска ---------- */
+Object.assign(P, {wboard: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', wtext: '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>', weraser: '<path d="M7 21h10"/><path d="M5.5 13.5l7-7a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 19H7l-1.5-1.5a2 2 0 0 1 0-4z"/>',
+  wundo: '<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>', wtrash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/>', wusers: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>', wclose: '<path d="M18 6L6 18M6 6l12 12"/>'});
+const LW = 800, MAXI = 3000, WCOL = ['#111827', '#e53935', '#fb8c00', '#43a047', '#1e88e5', '#8e24aa'];
+const wbCv = $('wbcv'), wbX = wbCv.getContext('2d');
+const wbNum = v => Math.max(0, Math.min(1000, Math.round(+v) || 0));
+const wbCol = c => /^#[0-9a-f]{6}$/i.test(c) ? c : '#111827';
+const wbId = () => String(me.uid || 'x').slice(0, 6) + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
+/* всё, что пришло по сети, проходит проверку: типы, границы, длины */
+function wbClean(o) {
+  if (!o || typeof o.id !== 'string' || o.id.length > 40) return null; const by = typeof o.by === 'string' ? o.by : '';
+  if (o.s !== undefined) return typeof o.s === 'string' ? {id: o.id, by, t: 'x', c: wbCol(o.c), z: Math.max(10, Math.min(200, +o.z || 36)), x: wbNum(o.x), y: wbNum(o.y), s: o.s.slice(0, 200)} : null;
+  if (!Array.isArray(o.p)) return null;
+  return {id: o.id, by, m: o.m === 'e' ? 'e' : 'p', c: wbCol(o.c), w: Math.max(1, Math.min(40, +o.w || 4)), p: o.p.slice(0, 4000).map(q => Array.isArray(q) ? [wbNum(q[0]), wbNum(q[1])] : [0, 0])}; }
+function wbSeg(it, i) {
+  const cw = wbCv.width, ch = wbCv.height, lw = (it.m === 'e' ? it.w * 3 : it.w) * cw / LW, b = it.p[i], a = it.p[Math.max(0, i - 1)];
+  wbX.save(); wbX.globalCompositeOperation = it.m === 'e' ? 'destination-out' : 'source-over'; wbX.strokeStyle = wbX.fillStyle = it.c; wbX.lineWidth = lw; wbX.lineCap = wbX.lineJoin = 'round'; wbX.beginPath();
+  if (i === 0) { wbX.arc(b[0] / 1000 * cw, b[1] / 1000 * ch, lw / 2, 0, 6.3); wbX.fill(); } else { wbX.moveTo(a[0] / 1000 * cw, a[1] / 1000 * ch); wbX.lineTo(b[0] / 1000 * cw, b[1] / 1000 * ch); wbX.stroke(); }
+  wbX.restore(); }
+function wbDraw(it) {
+  if (it.t === 'x') { wbX.save(); wbX.fillStyle = it.c; wbX.textBaseline = 'top'; wbX.font = `600 ${it.z * wbCv.width / LW}px ${getComputedStyle(document.body).fontFamily}`; wbX.fillText(it.s, it.x / 1000 * wbCv.width, it.y / 1000 * wbCv.height); wbX.restore(); }
+  else for (let i = 0; i < it.p.length; i++) wbSeg(it, i); }
+function wbRedraw() { wbX.clearRect(0, 0, wbCv.width, wbCv.height); wbItems.forEach(wbDraw); }
+function wbFit() {
+  if (!wbVis) return; const c = $('wbc'), n = $('wbn'), s = $('wbs'), aw = c.clientWidth, ah = c.clientHeight - (n.textContent ? n.offsetHeight + 6 : 0);
+  const w = Math.max(100, Math.min(aw, ah * 4 / 3)), h = w * 3 / 4, d = Math.min(2, window.devicePixelRatio || 1), pw = Math.round(w * d), ph = Math.round(h * d);
+  s.style.width = w + 'px'; s.style.height = h + 'px'; if (wbCv.width !== pw || wbCv.height !== ph) { wbCv.width = pw; wbCv.height = ph; wbRedraw(); } }
+new ResizeObserver(() => wbFit()).observe($('wbc'));
+function wbPerm() {
+  const c = canDraw(), h = isHost();
+  document.querySelectorAll('#wbtools button,#wbcols button,#wbcc,#wbw,#wbundo').forEach(b => b.disabled = !c);
+  $('wbclr').classList.toggle('hide', !h); $('wbdraw').classList.toggle('hide', !h); $('wbdraw').setAttribute('aria-pressed', String(!!RS.draw));
+  $('wbn').textContent = c ? (h && !RS.draw ? 'Рисуете только вы. Кнопка «Всем» разрешает рисовать участникам.' : '') : 'Рисовать может только организатор.';
+  if (!c) { wbCommit(); wbCur = null; } wbFit(); }
+function wbShow(v, remote) {
+  if (v === wbVis) return; if (!v) wbCommit(); wbVis = v; $('wb').classList.toggle('hide', !v); $('call').classList.toggle('wbon', v); $('bw').classList.toggle('on', v); $('bw').classList.remove('ping');
+  if (v) wbPerm(); if (remote) notify(v ? 'Организатор открыл доску.' : 'Организатор закрыл доску.'); }
+function wbToggle() { if (!room) return; wbShow(!wbVis); if (isHost() && sBd) sBd({k: 'o', v: wbVis, host: true}); }
+function wbReset() { wbItems = []; wbCur = null; wbVis = false; $('wb').classList.add('hide'); $('call').classList.remove('wbon'); $('bw').classList.remove('on', 'ping'); $('wbi').classList.add('hide'); wbX.clearRect(0, 0, wbCv.width, wbCv.height); }
+function wbSnap(id) {
+  if (!sBd || (!wbItems.length && !wbVis)) return; const B = 80; let i = 0;
+  do { const part = wbItems.slice(i, i + B); i += B; sBd({k: 'snap', host: true, reset: i <= B, items: part, more: i < wbItems.length, open: wbVis}, id); } while (i < wbItems.length); }
+const wbPing = () => { if (!wbVis) $('bw').classList.add('ping'); };
+function wbRecv(m, id) {
+  if (!m || typeof m !== 'object' || rejected.has(id)) return;
+  if (m.host && !hostId) { hostId = id; paintHost(); }
+  const host = id === hostId, may = !hostId || host || RS.draw; let it;
+  if (m.k === 'o') { if (host) wbShow(!!m.v, true); }
+  else if (m.k === 'c') { if (host) { wbItems = []; wbRedraw(); } }
+  else if (m.k === 'snap') { if (!host || !Array.isArray(m.items)) return; if (m.reset) wbItems = [];
+    for (const o of m.items) { const c = wbClean(o); if (c && wbItems.length < MAXI) wbItems.push(c); } if (!m.more) wbRedraw(); if (m.open) wbShow(true, true); }
+  else if (!may) return;
+  else if (m.k === 's') { it = wbClean({...m, by: id}); if (it && it.p && wbItems.length < MAXI) { wbItems.push(it); wbSeg(it, 0); wbPing(); } }
+  else if (m.k === 'a') { it = wbItems.find(x => x.id === m.id && x.by === id && x.p);
+    if (it && Array.isArray(m.p)) { for (const q of m.p.slice(0, 500)) if (Array.isArray(q) && it.p.length < 4000) { it.p.push([wbNum(q[0]), wbNum(q[1])]); wbSeg(it, it.p.length - 1); } wbPing(); } }
+  else if (m.k === 'x') { it = wbClean({...m, by: id}); if (it && it.t === 'x' && wbItems.length < MAXI) { wbItems.push(it); wbDraw(it); wbPing(); } }
+  else if (m.k === 'u') { const n = wbItems.findIndex(x => x.id === m.id); if (n >= 0 && (host || wbItems[n].by === id)) { wbItems.splice(n, 1); wbRedraw(); } } }
+/* ввод: кисть и ластик ведутся указателем (мышь, палец, стилус); текст ставится касанием */
+function wbPt(e) { const r = wbCv.getBoundingClientRect(); return [wbNum((e.clientX - r.left) / r.width * 1000), wbNum((e.clientY - r.top) / r.height * 1000)]; }
+function wbFlush() { wbTimer = 0; if (!wbCur || !sBd) return; if (wbCur.p.length > wbSent) { sBd({k: 'a', id: wbCur.id, p: wbCur.p.slice(wbSent)}); wbSent = wbCur.p.length; } }
+wbCv.addEventListener('pointerdown', e => {
+  if (wbTool === 'text' || !canDraw() || wbCur || e.button > 0) return; e.preventDefault(); wbCv.setPointerCapture(e.pointerId);
+  const it = {id: wbId(), by: me.uid, m: wbTool === 'er' ? 'e' : 'p', c: wbColor, w: wbWidth, p: [wbPt(e)]}; wbItems.push(it); wbCur = it; wbSent = 1; wbSeg(it, 0);
+  if (sBd) sBd({k: 's', id: it.id, m: it.m, c: it.c, w: it.w, p: it.p}); });
+wbCv.addEventListener('pointermove', e => {
+  if (!wbCur) return;
+  for (const ev of (e.getCoalescedEvents ? e.getCoalescedEvents() : [e])) { const p = wbPt(ev), l = wbCur.p[wbCur.p.length - 1]; if ((p[0] !== l[0] || p[1] !== l[1]) && wbCur.p.length < 4000) { wbCur.p.push(p); wbSeg(wbCur, wbCur.p.length - 1); } }
+  if (!wbTimer) wbTimer = setTimeout(wbFlush, 40); });
+const wbEnd = () => { if (!wbCur) return; wbFlush(); wbCur = null; };
+wbCv.addEventListener('pointerup', wbEnd); wbCv.addEventListener('pointercancel', wbEnd);
+wbCv.addEventListener('click', e => { if (wbTool !== 'text' || !canDraw()) return; wbCommit();
+  const r = wbCv.getBoundingClientRect(), i = $('wbi'), z = 24 + wbWidth * 3; i.dataset.x = wbNum((e.clientX - r.left) / r.width * 1000); i.dataset.y = wbNum((e.clientY - r.top) / r.height * 1000); i.dataset.z = z; i.dataset.c = wbColor;
+  i.style.cssText = `left:${e.clientX - r.left}px;top:${e.clientY - r.top}px;font-size:${z * r.width / LW}px;color:${wbColor}`; i.value = ''; i.classList.remove('hide'); i.focus(); });
+function wbCommit() {
+  const i = $('wbi'); if (i.classList.contains('hide')) return; const s = i.value.trim().slice(0, 120); i.classList.add('hide'); i.value = ''; if (!s || !canDraw()) return;
+  const it = {id: wbId(), by: me.uid, t: 'x', c: wbCol(i.dataset.c), z: +i.dataset.z, x: +i.dataset.x, y: +i.dataset.y, s}; wbItems.push(it); wbDraw(it); if (sBd) sBd({k: 'x', id: it.id, c: it.c, z: it.z, x: it.x, y: it.y, s: it.s}); }
+$('wbi').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); wbCommit(); } if (e.key === 'Escape') { e.stopPropagation(); $('wbi').value = ''; $('wbi').classList.add('hide'); } };
+$('wbi').onblur = wbCommit;
+/* панель инструментов */
+$('wbtools').innerHTML = [['pen', 'wboard', 'Кисть'], ['text', 'wtext', 'Текст'], ['er', 'weraser', 'Ластик']].map(([k, i, l]) => `<button class="wbb" data-tool="${k}" aria-label="${l}" title="${l}" aria-pressed="${k === wbTool}">${ic(i)}</button>`).join('');
+$('wbtools').onclick = e => { const b = e.target.closest('[data-tool]'); if (!b) return; wbCommit(); wbTool = b.dataset.tool; $('wbtools').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); wbCv.style.cursor = wbTool === 'text' ? 'text' : 'crosshair'; };
+$('wbcols').innerHTML = WCOL.map(c => `<button class="wbsw" data-c="${c}" style="background:${c}" aria-label="Цвет ${c}" title="Цвет" aria-pressed="${c === wbColor}"></button>`).join('') + '<input type="color" id="wbcc" class="wbcc" value="#111827" aria-label="Свой цвет" title="Свой цвет">';
+const wbDot = () => { const d = $('wbwv'), px = Math.max(4, Math.min(28, wbWidth + 3)); d.style.width = d.style.height = px + 'px'; d.style.background = wbColor; };
+function wbSetColor(c) { wbColor = c; $('wbcols').querySelectorAll('.wbsw').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.c === c))); wbDot(); }
+$('wbcols').onclick = e => { const b = e.target.closest('.wbsw'); if (b) wbSetColor(b.dataset.c); };
+$('wbcc').oninput = e => wbSetColor(e.target.value);
+$('wbw').oninput = e => { wbWidth = +e.target.value; wbDot(); };
+$('wbundo').innerHTML = ic('wundo'); $('wbclr').innerHTML = ic('wtrash'); $('wbdraw').innerHTML = ic('wusers') + '<span>Всем</span>'; $('wbx').innerHTML = ic('wclose'); $('bw').innerHTML = ic('wboard'); wbDot();
+$('wbundo').onclick = () => { if (!canDraw()) return; wbCommit(); const n = wbItems.map(x => x.by).lastIndexOf(me.uid); if (n < 0) return; const [it] = wbItems.splice(n, 1); wbRedraw(); if (sBd) sBd({k: 'u', id: it.id}); };
+$('wbclr').onclick = () => { if (!isHost() || !confirm('Очистить доску для всех?')) return; wbItems = []; wbRedraw(); if (sBd) sBd({k: 'c', host: true}); };
+$('wbdraw').onclick = () => setRoom('draw', !RS.draw);
+$('wbx').onclick = wbToggle; $('bw').onclick = wbToggle;
+
+/* ---------- занятие: журнал посещаемости, опросы, реакции, очередь рук ---------- */
+Object.assign(P, {wsmile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>', wlist: '<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>'});
+const EMO = ['👍', '👏', '❤️', '😂', '😮', '🎉'];
+/* случайный код этого устройства: по нему организатор не засчитывает второй голос после перезагрузки страницы */
+const DEV = (() => { try { let d = localStorage.sc_dev; if (!/^[a-z0-9]{16,40}$/.test(d || '')) { d = [...crypto.getRandomValues(new Uint8Array(12))].map(b => b.toString(36).padStart(2, '0')).join(''); localStorage.sc_dev = d; } return d; } catch { return (Math.random().toString(36) + '0000000000').slice(2, 14) + Date.now().toString(36); } })();
+const pad2 = n => String(n).padStart(2, '0');
+const fmtT = t => { const d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); };
+const fmtDT = t => { const d = new Date(t); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + ' ' + fmtT(t); };
+const fmtDur = ms => { const s = Math.max(0, Math.round(ms / 1000)), h = s / 3600 | 0; return (h ? h + ':' : '') + pad2(s / 60 % 60 | 0) + ':' + pad2(s % 60); };
+const rid = () => (Math.random().toString(36) + '0000000000').slice(2, 12);
+const handQ = () => Object.keys(roster).filter(id => roster[id] && roster[id].hand && !rejected.has(id)).sort((a, b) => (roster[a].handAt || 0) - (roster[b].handAt || 0));
+/* ---- хранение: только на устройстве организатора, с проверкой данных и сроком хранения 30 дней ---- */
+const RK = c => 'sc_room_' + c;
+function plTally(p) { p.c = p.o.map(() => 0); for (const v of Object.values(p.votes || {})) p.c[v.o]++; p.n = Object.keys(p.votes || {}).length; }
+function plClean(p, full) {
+  if (!p || typeof p.id !== 'string' || !/^[a-z0-9]{6,20}$/.test(p.id) || typeof p.q !== 'string' || !Array.isArray(p.o)) return null;
+  const o = p.o.filter(x => typeof x === 'string' && x.trim()).slice(0, 6).map(x => x.slice(0, 80)); if (o.length < 2) return null;
+  const r = {id: p.id, q: p.q.slice(0, 200), o, live: p.live !== false, st: p.st === 'closed' ? 'closed' : 'open', t: +p.t || 0, c: o.map(() => 0), n: 0};
+  if (full) { r.votes = {}; r.peers = {};
+    if (p.votes && typeof p.votes === 'object') for (const k of Object.keys(p.votes).slice(0, 500)) { const v = p.votes[k];
+      if (/^[dp]:[A-Za-z0-9_-]{1,40}$/.test(k) && v && Number.isInteger(v.o) && v.o >= 0 && v.o < o.length) r.votes[k] = {o: v.o, n: String(v.n || '').slice(0, 60), t: +v.t || 0, p: String(v.p || '').slice(0, 40)}; }
+    plTally(r); }
+  return r; }
+function dataClean(o) {
+  const r = {log: [], polls: [], seen: 0}; if (!o || typeof o !== 'object') return r; r.seen = +o.seen || 0;
+  if (Array.isArray(o.log)) for (const e of o.log.slice(-5000)) if (e && typeof e.n === 'string' && Number.isFinite(+e.i)) r.log.push({p: String(e.p || '').slice(0, 40), n: e.n.slice(0, 60), i: +e.i, o: e.o == null ? null : (+e.o || null)});
+  if (Array.isArray(o.polls)) for (const p of o.polls.slice(-50)) { const c = plClean(p, true); if (c) r.polls.push(c); }
+  return r; }
+let saveT = 0, hbT = 0, quotaWarned = false;
+function dataSave(now) {
+  if (!room || !isHost()) return;
+  const go = () => { saveT = 0; try { localStorage.setItem(RK(room), JSON.stringify({v: 1, seen: Date.now(), log: ATT, polls: POLLS.map(p => ({id: p.id, q: p.q, o: p.o, live: p.live, st: p.st, t: p.t, votes: p.votes}))})); }
+    catch { if (!quotaWarned) { quotaWarned = true; toast('Не удалось сохранить журнал на этом устройстве: нет места. Скачайте CSV.'); } } };
+  if (now) { clearTimeout(saveT); go(); } else if (!saveT) saveT = setTimeout(go, 400); }
+function dataPurge() { try { const keys = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('sc_room_')) keys.push(k); }
+  for (const k of keys) { let o = null; try { o = JSON.parse(localStorage.getItem(k)); } catch {} if (!o || Date.now() - (+o.seen || 0) > 30 * 864e5) localStorage.removeItem(k); } } catch {} }
+function hostStart() {
+  dataPurge(); let d = {log: [], polls: [], seen: 0}; try { const raw = localStorage.getItem(RK(room)); if (raw) d = dataClean(JSON.parse(raw)); } catch {}
+  ATT = d.log; POLLS = d.polls; const end = d.seen || Date.now(); ATT.forEach(e => { if (e.o == null) e.o = Math.max(e.i, end); });
+  attIn(me.uid, me.name); clearInterval(hbT); hbT = setInterval(() => dataSave(true), 15000); dataSave(true); paintLive(); }
+function hostStop() { if (!room) return; if (isHost()) { const t = Date.now(); ATT.forEach(e => { if (e.o == null) e.o = t; }); dataSave(true); } clearInterval(hbT); hbT = 0; }
+addEventListener('pagehide', () => { if (room && isHost()) { const t = Date.now(); ATT.forEach(e => { if (e.o == null) e.o = t; }); dataSave(true); } });
+/* ---- журнал посещаемости ---- */
+function attIn(p, n) { if (!isHost() || !RS.log || ATT.some(e => e.p === p && e.o == null)) return; ATT.push({p, n: String(n || 'Участник').slice(0, 60), i: Date.now(), o: null}); if (ATT.length > 5000) ATT.splice(0, ATT.length - 5000); dataSave(); paintLive(); }
+function attOut(p) { if (!isHost()) return; let ch = false; for (const e of ATT) if (e.p === p && e.o == null) { e.o = Date.now(); ch = true; } if (ch) { dataSave(); paintLive(); } }
+const csvCell = v => { let s = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+function csvSave(name, rows) { const body = '\uFEFF' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], {type: 'text/csv;charset=utf-8'})); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+const attRows = () => [['Имя', 'Вошёл', 'Вышел', 'Длительность', 'Статус'], ...ATT.slice().sort((a, b) => a.i - b.i).map(e => [e.n, fmtDT(e.i), e.o ? fmtDT(e.o) : '', fmtDur((e.o || Date.now()) - e.i), e.o ? 'вышел' : 'в встрече'])];
+const pollRows = () => { const r = [['Опрос', 'Вариант', 'Голосов', 'Доля, %', 'Проголосовали']]; for (const p of POLLS) p.o.forEach((o, i) => r.push([p.q, o, p.c[i], p.n ? Math.round(p.c[i] / p.n * 1000) / 10 : 0, Object.values(p.votes).filter(v => v.o === i).sort((a, b) => a.t - b.t).map(v => v.n).join(', ')])); return r; };
+/* ---- опросы: голоса считает только организатор, один голос на участника ---- */
+const plPub = p => ({id: p.id, q: p.q, o: p.o, live: p.live, st: p.st, t: p.t});
+const plShow = p => p.live || p.st === 'closed';
+let resT = {};
+function plRes(p, to) { if (sPl && plShow(p)) sPl({k: 'r', id: p.id, c: p.c, n: p.n}, to); }
+function plBump(p) { if (resT[p.id]) return; resT[p.id] = setTimeout(() => { delete resT[p.id]; plRes(p); }, 120); }
+function plState(p, st) { if (st === 'open') POLLS.forEach(x => { if (x !== p && x.st === 'open') plState(x, 'closed'); }); p.st = st; if (sPl) { sPl({k: 'p', poll: plPub(p)}); plRes(p); } dataSave(); paintLive(); }
+function plCreate(q, opts, live) {
+  if (!isHost()) return false; q = q.trim().slice(0, 200); opts = opts.map(x => x.trim().slice(0, 80)).filter(Boolean).slice(0, 6);
+  if (!q || opts.length < 2) { toast('Нужен вопрос и минимум два варианта ответа.'); return false; }
+  if (POLLS.length >= 50) { toast('Слишком много опросов: удалите старые.'); return false; }
+  POLLS.forEach(x => { if (x.st === 'open') plState(x, 'closed'); });
+  const p = {id: rid(), q, o: opts, live, st: 'open', t: Date.now(), c: opts.map(() => 0), n: 0, votes: {}, peers: {}}; POLLS.push(p);
+  if (sPl) { sPl({k: 'p', poll: plPub(p)}); plRes(p); } dataSave(); paintLive(); return true; }
+function plDelete(p) { POLLS = POLLS.filter(x => x !== p); if (sPl) sPl({k: 'x', id: p.id}); dataSave(); paintLive(); }
+function plSnap(id) { if (sPl) sPl({k: 'snap', host: true, polls: POLLS.map(p => ({...plPub(p), ...(plShow(p) ? {c: p.c, n: p.n} : {})}))}, id); }
+function plVote(m, id) {
+  if (!isHost() || rejected.has(id) || !roster[id]) return;
+  const p = POLLS.find(x => x.id === m.id); if (!p || p.st !== 'open') return sPl && sPl({k: 'no', id: m.id, why: 'closed'}, id);
+  if (!Number.isInteger(m.o) || m.o < 0 || m.o >= p.o.length) return;
+  const key = typeof m.d === 'string' && /^[a-z0-9]{8,40}$/.test(m.d) ? 'd:' + m.d : 'p:' + id;
+  const prev = p.votes[key] || p.votes[p.peers[id]];
+  if (prev) return sPl && sPl({k: 'ok', id: p.id, o: prev.o}, id);   /* повторный голос: не считаем, подтверждаем первый */
+  if (Object.keys(p.votes).length >= 500) return;
+  p.votes[key] = {o: m.o, n: String(roster[id].name || 'Участник').slice(0, 60), t: Date.now(), p: id}; p.peers[id] = key; plTally(p);
+  if (sPl) sPl({k: 'ok', id: p.id, o: m.o}, id); plBump(p); dataSave(); paintLive(); }
+function plHi(m, id) {
+  if (!isHost() || typeof m.d !== 'string' || !/^[a-z0-9]{8,40}$/.test(m.d)) return; const mine = {};
+  for (const p of POLLS) { const v = p.votes['d:' + m.d]; if (v) { mine[p.id] = v.o; p.peers[id] = 'd:' + m.d; } }
+  if (Object.keys(mine).length && sPl) sPl({k: 'mine', m: mine}, id); }
+function plNew(c) { toast('Новый опрос: ' + c.q.slice(0, 60)); beep(900, .15); $('bl').classList.add('ping'); if ($('scrim').classList.contains('hide')) openLive('polls'); }
+function plRecv(m, id) {
+  if (!m || typeof m !== 'object' || rejected.has(id)) return;
+  if (m.host && !hostId) { hostId = id; paintHost(); }
+  if (m.k === 'v') return plVote(m, id);
+  if (m.k === 'hi') return plHi(m, id);
+  if (id !== hostId || isHost()) return;
+  if (m.k === 'snap') { if (!Array.isArray(m.polls)) return; const keep = new Map(POLLS.map(p => [p.id, p])); POLLS = [];
+    for (const o of m.polls.slice(0, 50)) { const c = plClean(o); if (!c) continue; if (Array.isArray(o.c) && o.c.length === c.o.length) { c.c = o.c.map(x => Math.max(0, +x | 0)); c.n = Math.max(0, +o.n | 0); c.res = true; } const old = keep.get(c.id); if (old) c.m = old.m; POLLS.push(c); }
+    sPl && sPl({k: 'hi', d: DEV}, id); paintLive(); }
+  else if (m.k === 'p') { const c = plClean(m.poll); if (!c) return; const i = POLLS.findIndex(p => p.id === c.id);
+    if (i >= 0) { const o = POLLS[i]; c.c = o.c; c.n = o.n; c.m = o.m; c.res = o.res; POLLS[i] = c; } else { POLLS.push(c); if (c.st === 'open') plNew(c); } paintLive(); }
+  else if (m.k === 'r') { const p = POLLS.find(x => x.id === m.id); if (p && Array.isArray(m.c) && m.c.length === p.o.length) { p.c = m.c.map(x => Math.max(0, +x | 0)); p.n = Math.max(0, +m.n | 0); p.res = true; paintLive(); } }
+  else if (m.k === 'x') { POLLS = POLLS.filter(p => p.id !== m.id); paintLive(); }
+  else if (m.k === 'ok') { const p = POLLS.find(x => x.id === m.id); if (p && Number.isInteger(m.o) && m.o >= 0 && m.o < p.o.length) { p.m = m.o; p.pend = false; paintLive(); } }
+  else if (m.k === 'no') { const p = POLLS.find(x => x.id === m.id); if (p) { p.pend = false; toast('Опрос уже завершён: голос не принят.'); paintLive(); } }
+  else if (m.k === 'mine') { if (m.m && typeof m.m === 'object') { for (const p of POLLS) { const o = m.m[p.id]; if (Number.isInteger(o) && o >= 0 && o < p.o.length) p.m = o; } paintLive(); } } }
+function plCast(p, o) {
+  if (p.m != null || p.pend || p.st !== 'open' || !sPl || !hostId) return; p.pend = true; paintLive(); sPl({k: 'v', id: p.id, o, d: DEV}, hostId);
+  setTimeout(() => { if (p.pend) { p.pend = false; toast('Не удалось отправить голос. Попробуйте ещё раз.'); paintLive(); } }, 5000); }
+/* ---- реакции ---- */
+let rxLast = {}, rxMine = 0;
+function rxShow(id, i) {
+  const fx = $('rfx'); if (!fx || fx.children.length > 40) return; const t = $('t-' + id), r = t ? t.getBoundingClientRect() : null, e = document.createElement('div');
+  e.className = 'rx'; e.innerHTML = `<span>${EMO[i]}</span><em>${esc(id === me.uid ? 'Вы' : ((roster[id] || {}).name || 'Участник'))}</em>`;
+  e.style.left = (r && r.width ? r.left + r.width * (.2 + Math.random() * .6) : innerWidth * (.3 + Math.random() * .4)) + 'px'; e.style.top = (r && r.height ? r.bottom - 20 : innerHeight - 140) + 'px';
+  fx.append(e); e.addEventListener('animationend', () => e.remove()); setTimeout(() => e.remove(), 3600); }
+function rxSend(i) { if (!room || !canReact() || Date.now() - rxMine < 350) return; rxMine = Date.now(); if (sRx) sRx({i}); rxShow(me.uid, i); }
+function rxRecv(m, id) {
+  if (!m || typeof m !== 'object' || rejected.has(id) || !Number.isInteger(m.i) || m.i < 0 || m.i >= EMO.length || (id !== hostId && !RS.react)) return;
+  const now = Date.now(); if (now - (rxLast[id] || 0) < 250) return; rxLast[id] = now; rxShow(id, m.i); }
+$('rpop').innerHTML = EMO.map((e, i) => `<button type="button" data-i="${i}" aria-label="Реакция ${e}">${e}</button>`).join('');
+$('bz').innerHTML = ic('wsmile'); $('bl').innerHTML = ic('wlist');
+$('bz').onclick = () => { if (!room) return; if (!canReact()) return toast('Организатор отключил реакции.'); const p = $('rpop'); if (!p.classList.contains('hide')) return p.classList.add('hide'); p.classList.remove('hide'); p.style.bottom = (innerHeight - document.querySelector('.dock').getBoundingClientRect().top + 8) + 'px'; };
+$('rpop').onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; rxSend(+b.dataset.i); $('rpop').classList.add('hide'); };
+document.addEventListener('pointerdown', e => { if (!$('rpop').classList.contains('hide') && !e.target.closest('#rpop,#bz')) $('rpop').classList.add('hide'); });
+/* ---- панель «Занятие»: опросы, руки, журнал ---- */
+let ltab = 'polls', LL = null, draft = {open: false, q: '', o: ['', ''], live: true}, seenWho = {}, prevW = {}, logNoted = false;
+const lopen = () => !$('ldrawer').classList.contains('hide');
+function paintLive() {
+  const q = handQ(), op = POLLS.find(p => p.st === 'open'), b = $('bl'); let n = '';
+  if (room) { if (isHost()) n = q.length ? String(q.length) : ''; else if (op && op.m == null) n = '!'; }
+  if (n) b.dataset.n = n; else delete b.dataset.n;
+  $('bz').classList.toggle('dis', !!room && !canReact());
+  if (lopen()) renderLive(ltab === 'polls' && LL && LL.isConnected ? 'list' : 'full'); }
+function openLive(tab) {
+  if (!room) return; ltab = tab || ltab; if (ltab === 'log' && !isHost()) ltab = 'polls';
+  ['drawer', 'rdrawer', 'ndrawer'].forEach(x => $(x).classList.add('hide')); $('rpop').classList.add('hide'); renderLive('full'); $('scrim').classList.remove('hide'); $('ldrawer').classList.remove('hide'); $('bl').classList.remove('ping'); }
+function renderLive(mode) {
+  const host = isHost(), tabs = $('ltabs'), box = $('lb'), qn = handQ().length;
+  tabs.innerHTML = ''; for (const [v, n] of [['polls', 'Опросы'], ['hands', 'Руки' + (qn ? ' · ' + qn : '')], ...(host ? [['log', 'Журнал']] : [])]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', String(ltab === v)); b.onclick = () => { ltab = v; renderLive('full'); }; tabs.append(b); }
+  if (mode === 'list') { fillPolls(LL); return; }
+  const st = box.scrollTop; box.innerHTML = ''; LL = null; if (ltab === 'polls') livePolls(box); else if (ltab === 'hands') liveHands(box); else liveLog(box); box.scrollTop = st; }
+const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const mkBtn = (txt, cls, fn) => { const b = mk('button', 'btn ' + (cls || ''), txt); b.type = 'button'; b.onclick = fn; return b; };
+function livePolls(box) {
+  if (isHost()) {
+    const f = mk('div', 'pform');
+    if (!draft.open) f.append(mkBtn('Новый опрос', '', () => { draft.open = true; renderLive('full'); }));
+    else {
+      const q = mk('input'); q.type = 'text'; q.maxLength = 200; q.placeholder = 'Вопрос'; q.value = draft.q; q.setAttribute('aria-label', 'Вопрос опроса'); q.oninput = () => draft.q = q.value; f.append(q);
+      draft.o.forEach((v, i) => { const r = mk('div', 'prow'), t = mk('input'); t.type = 'text'; t.maxLength = 80; t.placeholder = 'Вариант ' + (i + 1); t.value = v; t.setAttribute('aria-label', 'Вариант ответа ' + (i + 1)); t.oninput = () => draft.o[i] = t.value; r.append(t);
+        if (draft.o.length > 2) { const x = mk('button', 'mv', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Убрать вариант ' + (i + 1)); x.onclick = () => { draft.o.splice(i, 1); renderLive('full'); }; r.append(x); } f.append(r); });
+      if (draft.o.length < 6) f.append(mkBtn('+ Вариант', 'ghost sm', () => { draft.o.push(''); renderLive('full'); }));
+      const sw = mk('label', 'swr'); sw.innerHTML = '<span>Показывать участникам результаты сразу</span><input type="checkbox" role="switch"' + (draft.live ? ' checked' : '') + '>'; sw.querySelector('input').onchange = e => draft.live = e.target.checked; f.append(sw);
+      const bs = mk('div', 'rbtns'); bs.append(mkBtn('Запустить опрос', '', () => { if (plCreate(draft.q, draft.o, draft.live)) { draft = {open: false, q: '', o: ['', ''], live: true}; renderLive('full'); } }), mkBtn('Отмена', 'ghost', () => { draft.open = false; renderLive('full'); })); f.append(bs); }
+    box.append(f); }
+  LL = mk('div', 'plist'); box.append(LL); fillPolls(LL); }
+function fillPolls(el) {
+  const host = isHost(); el.innerHTML = ''; const list = POLLS.slice().reverse();
+  if (!list.length) { el.append(mk('p', 'rnote', host ? 'Опросов пока нет. Нажмите «Новый опрос».' : 'Опросов пока нет. Когда организатор запустит опрос, он появится здесь.')); return; }
+  for (const p of list) {
+    const c = mk('div', 'pc'), head = mk('div', 'pch'); head.append(mk('b', '', p.q), mk('span', 'tg ' + (p.st === 'open' ? 'fix' : 'off'), p.st === 'open' ? 'идёт' : 'завершён')); c.append(head);
+    const showRes = host || (p.res && plShow(p)), canVote = !host && p.st === 'open' && p.m == null;
+    p.o.forEach((o, i) => {
+      if (canVote) { const b = mk('button', 'popt', o); b.type = 'button'; b.disabled = !!p.pend; b.onclick = () => plCast(p, i); c.append(b); return; }
+      const pct = p.n ? Math.round((p.c[i] || 0) / p.n * 100) : 0, row = mk('div', 'pbar' + (p.m === i ? ' mine' : '')), fill = mk('i'), key = p.id + ':' + i;
+      if (showRes) { fill.style.width = (prevW[key] || 0) + '%'; requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = pct + '%'; })); prevW[key] = pct; }
+      row.append(fill, mk('span', '', (p.m === i ? '✓ ' : '') + o)); if (showRes) row.append(mk('b', '', (p.c[i] || 0) + ' · ' + pct + '%')); c.append(row); });
+    if (!host) c.append(mk('p', 'rnote', p.pend ? 'Отправляем ваш голос…' : p.m != null ? 'Ваш голос принят.' + (showRes ? ' Всего голосов: ' + p.n + '.' : ' Результаты появятся после завершения опроса.') : p.st === 'closed' ? 'Опрос завершён.' : ''));
+    else {
+      c.append(mk('p', 'rnote', 'Проголосовали: ' + p.n + '. ' + (p.live ? 'Участники видят результаты сразу.' : 'Участники увидят результаты после завершения.')));
+      const bs = mk('div', 'rbtns'); bs.append(mkBtn(p.st === 'open' ? 'Завершить' : 'Возобновить', 'ghost sm', () => plState(p, p.st === 'open' ? 'closed' : 'open')), mkBtn('Кто как голосовал', 'ghost sm', () => { seenWho[p.id] = !seenWho[p.id]; fillPolls(el); }), mkBtn('Удалить', 'ghost sm', () => { if (confirm('Удалить опрос и его результаты?')) plDelete(p); })); c.append(bs);
+      if (seenWho[p.id]) { const w = mk('div', 'who2'), vs = Object.values(p.votes).sort((a, b) => a.t - b.t); if (!vs.length) w.append(mk('p', 'rnote', 'Пока никто не проголосовал.')); for (const v of vs) w.append(mk('div', 'pl', v.n + ' — ' + (p.o[v.o] || '')));
+        c.append(w); } }
+    el.append(c); } }
+function liveHands(box) {
+  const q = handQ(), host = isHost(), pos = q.indexOf(me.uid);
+  box.append(mk('p', 'rnote', host ? 'Участники в порядке поднятия руки.' : pos >= 0 ? 'Ваша рука поднята: вы ' + (pos + 1) + '-й в очереди.' : 'Поднимите руку, чтобы встать в очередь.'));
+  box.append(mkBtn(hand ? 'Опустить мою руку' : 'Поднять мою руку', hand ? 'ghost' : '', () => $('bh').click()));
+  if (!q.length) box.append(mk('p', 'rnote', 'Сейчас никто не поднимал руку.'));
+  q.forEach((id, i) => { const r = mk('div', 'pl'), sp = mk('span', '', (i + 1) + '. ' + (id === me.uid ? 'Вы' : (roster[id].name || 'Участник')) + ' · ' + fmtDur(Date.now() - (roster[id].handAt || Date.now())));
+    r.append(sp); if (host && id !== me.uid) r.append(mkBtn('Опустить', 'ghost sm', () => { sRm({lower: true}, id); roster[id].hand = false; paintTile(id); paintLive(); })); box.append(r); });
+  if (host && q.length) box.append(mkBtn('Опустить все руки', 'ghost', () => { sRm({lower: true}); if (hand) $('bh').click(); q.forEach(id => { if (roster[id]) { roster[id].hand = false; paintTile(id); } }); paintLive(); })); }
+function liveLog(box) {
+  const open = ATT.filter(e => e.o == null).length, uniq = new Set(ATT.map(e => e.n)).size;
+  box.append(mk('p', 'rnote', RS.log ? 'Журнал ведётся: имя, время входа и выхода. Он хранится только на этом устройстве, участники его не видят.' : 'Журнал выключен в настройках комнаты: новые заходы не записываются.'));
+  box.append(mk('p', 'rnote', 'Сейчас во встрече: ' + open + ' · Заходов: ' + ATT.length + ' · Разных имён: ' + uniq));
+  const bs = mk('div', 'rbtns'); bs.append(mkBtn('Скачать CSV посещаемости', '', () => { if (!ATT.length) return toast('В журнале пока нет записей.'); csvSave('attendance_' + room + '_' + fmtDT(Date.now()).slice(0, 10) + '.csv', attRows()); }),
+    mkBtn('Скачать CSV опросов', 'ghost', () => { if (!POLLS.length) return toast('Опросов пока нет.'); csvSave('polls_' + room + '_' + fmtDT(Date.now()).slice(0, 10) + '.csv', pollRows()); }),
+    mkBtn('Удалить данные встречи', 'bad', () => { if (!confirm('Удалить журнал и опросы этой встречи с этого устройства?')) return; POLLS.forEach(p => sPl && sPl({k: 'x', id: p.id})); POLLS = []; const now = Date.now(); ATT = []; ATT.length = 0; try { localStorage.removeItem(RK(room)); } catch {} Object.keys(roster).forEach(id => roster[id].name && attIn(id, roster[id].name)); dataSave(true); paintLive(); toast('Данные встречи удалены.'); })); box.append(bs);
+  box.append(mk('h4', '', 'Входы и выходы'));
+  if (!ATT.length) box.append(mk('p', 'rnote', 'Пока нет записей.'));
+  for (const e of ATT.slice().reverse().slice(0, 200)) { const r = mk('div', 'pl'); r.append(mk('span', '', e.n + ' · ' + fmtT(e.i) + ' — ' + (e.o ? fmtT(e.o) : 'в встрече') + ' (' + fmtDur((e.o || Date.now()) - e.i) + ')')); box.append(r); } }
+setInterval(() => { if (lopen() && (ltab === 'hands' || ltab === 'log')) renderLive('full'); }, 15000);
+function liveReset() { ATT = []; POLLS = []; LL = null; ltab = 'polls'; draft = {open: false, q: '', o: ['', ''], live: true}; seenWho = {}; prevW = {}; rxLast = {}; logNoted = false; resT = {}; $('ldrawer').classList.add('hide'); $('rpop').classList.add('hide'); $('rfx').innerHTML = ''; $('bl').classList.remove('ping'); delete $('bl').dataset.n; }
+$('bl').onclick = () => openLive('polls'); $('lx').onclick = () => closeSettings();
+
+/* ---------- запуск ---------- */
+paintCtl();
+$('feat').innerHTML = [['scr', 'Показ экрана'], ['hand', 'Поднять руку'], ['chat', 'Чат встречи']].map(([i, t]) => `<li>${ic(i)}${t}</li>`).join('');
+document.querySelectorAll('.cb').forEach(b => b.title = b.getAttribute('aria-label'));
+if (INVITE) $('jc').value = INVITE;
+$('pi').innerHTML = ic('cam'); $('pg').onclick = () => getMedia();
+function permFail(e) { const n = e && e.name || ''; $('perm').classList.remove('hide'); $('pg').textContent = 'Попробовать снова';
+  $('ph').textContent = n === 'NotAllowedError' || n === 'SecurityError' ? 'Доступ запрещён' : 'Не удалось включить камеру';
+  $('pt').textContent = '';
+  $('pe').textContent = typeof e === 'string' ? e
+    : n === 'NotAllowedError' || n === 'SecurityError' ? 'Нажмите на значок замка рядом с адресом сайта, включите камеру и микрофон, затем нажмите кнопку ниже.'
+    : n === 'NotFoundError' ? 'Камера и микрофон не найдены. Подключите устройство и нажмите кнопку ниже.'
+    : n === 'NotReadableError' ? 'Камеру или микрофон сейчас использует другое приложение. Закройте его и нажмите кнопку ниже.'
+    : 'Попробуйте обновить страницу.'; }
+let mediaP = null, lastErr = null;
+function getMedia() { if (local) return Promise.resolve(); return mediaP || (mediaP = askMedia().finally(() => { mediaP = null; })); }
+async function askMedia() {
+  $('pe').textContent = '';
+  const md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia) { return permFail('Этот адрес или браузер не поддерживает камеру. Откройте сайт по ссылке с https:// в Chrome, Safari или Firefox.'); }
+  let err;
+  for (const c of [{video: {...vc(), ...(S.cam ? {deviceId: {ideal: S.cam}} : {})}, audio: {...ac(), ...(S.mic ? {deviceId: {ideal: S.mic}} : {})}}, {video: false, audio: true}, {video: true, audio: false}]) {
+    try { local = await md.getUserMedia(c); break; } catch (e) { err = e; if (e.name === 'NotAllowedError' || e.name === 'SecurityError') break; } }
+  if (!local) { lastErr = err; return permFail(err); }
+  micOn = local.getAudioTracks().length > 0; camOn = local.getVideoTracks().length > 0;
+  $('perm').classList.add('hide'); $('pv').srcObject = local; applyTracks(); paintCtl(); watch(local, 'pv', () => document.querySelector('.prev'));
+  if (!camOn) toast('Камера не найдена: вы будете без видео.'); }
+addEventListener('focus', () => { if (!local && !$('lobby').classList.contains('hide')) getMedia(); });
+
+/* ---------- регистрация и вход (Supabase) ---------- */
+let sb = null, signup = false;
+function authMsg(m) { m = (m || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Неверная почта или пароль.';
+  if (m.includes('already') && m.includes('registered')) return 'Эта почта уже зарегистрирована. Откройте вкладку «Вход».';
+  if (m.includes('password should')) return 'Пароль слишком короткий: нужно минимум 6 символов.';
+  if (m.includes('not confirmed')) return 'Подтвердите почту: мы отправили вам письмо со ссылкой.';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Слишком много попыток. Подождите немного.';
+  if (m.includes('email')) return 'Проверьте адрес почты.';
+  if (m.includes('fetch') || m.includes('network')) return 'Нет связи с сервером. Проверьте интернет.';
+  return 'Не получилось: ' + m; }
+function mode(up) { signup = up; $('t-in').setAttribute('aria-selected', !up); $('t-up').setAttribute('aria-selected', up);
+  $('an').classList.toggle('hide', !up); $('ap').autocomplete = up ? 'new-password' : 'current-password';
+  $('at').textContent = up ? 'Регистрация' : 'Вход'; $('asub').textContent = up ? 'Создать аккаунт' : 'Войти'; $('aerr').textContent = ''; $('aerr').className = 'err'; }
+$('t-in').onclick = () => mode(false); $('t-up').onclick = () => mode(true);
+$('af').onsubmit = async e => { e.preventDefault(); const err = $('aerr'); err.className = 'err'; err.textContent = '';
+  const email = $('ae').value.trim(), pw = $('ap').value; $('asub').disabled = true;
+  try {
+    if (signup) {
+      const name = $('an').value.trim(); if (!name) { err.textContent = 'Введите ваше имя.'; return; }
+      const {data, error} = await sb.auth.signUp({email, password: pw, options: {data: {name}}}); if (error) throw error;
+      if (data.session) enterLobby(data.session.user);
+      else { mode(false); $('ae').value = email; err.className = 'err ok'; err.textContent = 'Аккаунт создан. Мы отправили письмо: перейдите по ссылке в нём и затем войдите.'; }
+    } else { const {data, error} = await sb.auth.signInWithPassword({email, password: pw}); if (error) throw error; enterLobby(data.user); }
+  } catch (x) { err.textContent = authMsg(x.message); } finally { $('asub').disabled = false; } };
+$('lout').onclick = async () => { if (room) $('be').click(); if (sb && !guest) await sb.auth.signOut();
+  if (local) { local.getTracks().forEach(t => t.stop()); local = null; } unwatch('pv'); $('pv').srcObject = null; $('perm').classList.remove('hide'); $('pg').textContent = 'Разрешить доступ';
+  $('ph').textContent = 'Разрешите доступ к камере и микрофону'; $('pe').textContent = ''; $('nm').readOnly = false; $('ap').value = ''; show('auth'); };
+const ACTS = $('acts').textContent; let guest = false;
+function enterLobby(u, real = true) {
+  const name = real ? ((u.user_metadata && u.user_metadata.name) || (u.email || '').split('@')[0]) : u.name, auth = !!SUPABASE_KEY, inv = !real && !!INVITE;
+  guest = !real; me.name = name || ''; $('nm').value = me.name; $('nm').readOnly = real && !!me.name;
+  $('who').classList.toggle('hide', !auth); $('tag').classList.toggle('hide', auth);
+  $('lname').textContent = real ? me.name : 'Гость'; $('lout').textContent = real ? 'Выйти' : 'Войти в аккаунт';
+  $('act').classList.toggle('invite', inv); $('actt').textContent = inv ? 'Вас пригласили на встречу' : 'Новая встреча'; $('acts').textContent = inv ? 'Введите имя и входите. Регистрация не нужна.' : ACTS;
+  if (INVITE) $('jc').value = INVITE;
+  show('lobby'); getMedia();
+  if (INVITE && !room && (real || me.name)) join(INVITE); }
+$('ag').onclick = () => enterLobby({name: localStorage.name || ''}, false);
+$('ji').onclick = () => join(INVITE);
+$('nm').onkeydown = e => { if (e.key === 'Enter' && INVITE && guest) $('ji').click(); };
+function keyInfo() { try { return JSON.parse(atob(SUPABASE_KEY.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { return {}; } }
+async function boot() {
+  const info = keyInfo(), url = SUPABASE_URL || (info.ref ? 'https://' + info.ref + '.supabase.co' : '');
+  if (!SUPABASE_KEY) return enterLobby({name: localStorage.name || ''}, false);
+  if (!url) { show('auth'); return $('aerr').textContent = 'Не указан адрес проекта: впишите его в SUPABASE_URL в начале скрипта (вид https://ВАШ-ID.supabase.co).'; }
+  if (info.role === 'service_role') { show('auth'); return $('aerr').textContent = 'Вставлен секретный ключ service_role. Его нельзя публиковать: возьмите ключ anon public.'; }
+  if (INVITE) { $('act').classList.add('invite'); $('actt').textContent = 'Вас пригласили на встречу'; $('acts').textContent = 'Введите имя и входите. Регистрация не нужна.'; $('nm').value = localStorage.name || ''; $('jc').value = INVITE; } else show('auth');
+  let mod;
+  for (const u of ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm', 'https://esm.sh/@supabase/supabase-js@2.45.4']) { try { mod = await import(u); break; } catch (e) { console.error('Не загрузилось:', u, e); } }
+  if (!mod) { if (INVITE) return enterLobby({name: localStorage.name || ''}, false); return $('aerr').textContent = 'Не удалось загрузить модуль входа. Проверьте интернет, отключите VPN или блокировщик и обновите страницу.'; }
+  sb = mod.createClient(url, SUPABASE_KEY);
+  const {data} = await sb.auth.getSession(); if (data.session) enterLobby(data.session.user); else if (INVITE) enterLobby({name: localStorage.name || ''}, false);
+}
+/* ---------- настройки и кастомизация ---------- */
+P.gear = '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>';
+/* порядок кнопок нижней панели; «Выйти из встречи» всегда последняя и не двигается */
+const ORD0 = ['bm', 'bc', 'bs', 'bw', 'bh', 'bz', 'bl', 'bt', 'bset', 'br'];
+const normOrder = a => { const o = (Array.isArray(a) ? a : []).filter((x, i, r) => ORD0.includes(x) && r.indexOf(x) === i); ORD0.forEach((x, i) => { if (!o.includes(x)) { const at = o.indexOf(ORD0[i - 1]); at >= 0 ? o.splice(at + 1, 0, x) : o.push(x); } }); return o; };
+const DEF = {order: ORD0.slice(), pal: 'classic', font: 'onest', btn: 'round', anim: 'strong',
+  bgm: 'default', bgp: 'aurora', bgblur: 0, bgveil: 50,
+  fit: 'cover', mir: true, self: true, names: true, meta: true, gap: 12, dk: 100, sounds: true, notify: true, q: 720, ec: true, ns: true, agc: true, cam: '', mic: '', spk: ''};
+const FF = {onest: 'Onest,system-ui,sans-serif', system: 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif', serif: 'Georgia,"Times New Roman",serif', mono: 'ui-monospace,"SF Mono",Menlo,Consolas,monospace', round: 'Comfortaa,Onest,system-ui,sans-serif'};
+const BGP = {
+  aurora: ['Аврора', '#5b5be0', 'radial-gradient(1000px 600px at 15% 10%,#6a6aff99,transparent 60%),radial-gradient(900px 600px at 85% 90%,#00d4aa77,transparent 60%),linear-gradient(135deg,#0d1b3d,#2b1b5e)'],
+  sunrise: ['Рассвет', '#e8503a', 'radial-gradient(900px 600px at 80% 0,#ffd23f99,transparent 60%),linear-gradient(160deg,#ff7a59,#c2306b 60%,#3b1d6e)'],
+  ocean: ['Океан', '#0e8fc4', 'linear-gradient(160deg,#0f8bb5,#0a3f6b 60%,#06182e)'],
+  forest: ['Лес', '#1f9d6b', 'linear-gradient(160deg,#2fa36b,#0d4a38 60%,#04170f)'],
+  graphite: ['Графит', '#3a3f4b', 'linear-gradient(160deg,#3a3f4b,#16181d)'],
+  paper: ['Светлый', '#dfe6f5', 'linear-gradient(160deg,#ffffff,#dfe6f5)']};
+const effPal = () => S.pal === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'classic') : S.pal;
+/* своё фото хранится в IndexedDB: в localStorage оно не поместилось бы */
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('sc_bg', 1); r.onupgradeneeded = () => r.result.createObjectStore('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const idbSet = async v => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('k', 'readwrite'); v == null ? t.objectStore('k').delete('photo') : t.objectStore('k').put(v, 'photo'); t.oncomplete = res; t.onerror = () => rej(t.error); }); };
+const idbGet = async () => { const d = await idb(); return new Promise((res, rej) => { const q = d.transaction('k').objectStore('k').get('photo'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); };
+let bgUrl = null;
+async function setPhoto(f) {
+  const u = URL.createObjectURL(f);
+  try {
+    const im = new Image(); im.src = u; await im.decode();
+    const k = Math.min(1, 2200 / Math.max(im.naturalWidth, im.naturalHeight)), cv = document.createElement('canvas');
+    cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
+    const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(im, 0, 0, cv.width, cv.height);
+    const b = await new Promise(r => cv.toBlob(r, 'image/jpeg', .88)); if (!b) throw 0;
+    try { await idbSet(b); } catch { toast('Фото сохранить не удалось: оно будет работать до закрытия вкладки.'); }
+    if (bgUrl) URL.revokeObjectURL(bgUrl); bgUrl = URL.createObjectURL(b); S.bgm = 'photo'; apply();
+  } finally { URL.revokeObjectURL(u); } }
+async function removePhoto() { try { await idbSet(null); } catch {} if (bgUrl) URL.revokeObjectURL(bgUrl); bgUrl = null; if (S.bgm === 'photo') S.bgm = 'default'; apply(); }
+async function loadPhoto() { try { const b = await idbGet(); if (b) { bgUrl = URL.createObjectURL(b); updBg(); } } catch {} }
+function updBg() {
+  const h = document.documentElement, d = h.dataset; let img = '';
+  if (S.bgm === 'photo' && bgUrl) img = `url("${bgUrl}")`; else if (S.bgm === 'preset' && BGP[S.bgp]) img = BGP[S.bgp][2];
+  d.photo = img ? 'on' : 'off';
+  $('bgimg').style.backgroundImage = img;
+  h.style.setProperty('--bgblur', S.bgblur + 'px'); h.style.setProperty('--veil', S.bgveil / 100); }
+const words = t => t.split(' ').map((w, i) => `<span style="--i:${i}">${esc(w)}</span>`).join(' ');
+let S = {...DEF}; try { Object.assign(S, JSON.parse(localStorage.sc_settings || '{}')); } catch {}
+for (const k of ['accent', 'mark', 'rad', 'grid', 'blobs', 'bgx', 'bgy', 'glass', 'bgcall', 'title', 'hero']) delete S[k];
+const QS = {360: [640, 360], 720: [1280, 720], 1080: [1920, 1080]};
+const vc = () => { const [w, h] = QS[S.q] || QS[720]; return {width: {ideal: w}, height: {ideal: h}, facingMode: 'user'}; };
+const ac = () => ({echoCancellation: S.ec, noiseSuppression: S.ns, autoGainControl: S.agc});
+const notify = t => S.notify && toast(t);
+const applySink = v => v.setSinkId && S.spk && v.setSinkId(S.spk).catch(() => {});
+function beep(f = 660, d = .12) { if (!S.sounds) return; try { AC = AC || new AudioContext(); const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f; g.gain.value = .07; o.connect(g); g.connect(AC.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.stop(AC.currentTime + d); } catch {} }
+function apply() { const h = document.documentElement, d = h.dataset;
+  d.pal = effPal(); d.anim = S.anim; d.btn = S.btn; d.names = S.names; d.meta = S.meta; d.self = S.self;
+  h.style.setProperty('--fit', S.fit); h.style.setProperty('--mir', S.mir ? -1 : 1);
+  h.style.setProperty('--ff', FF[S.font] || FF.onest); h.style.setProperty('--gap', S.gap + 'px'); h.style.setProperty('--dk', S.dk / 100);
+  S.order = normOrder(S.order); S.order.forEach((id, n) => { const b = $(id); if (b) b.style.order = n; });
+  updBg();
+  const tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.content = getComputedStyle(h).getPropertyValue('--night').trim() || '#0e1630';
+  try { localStorage.sc_settings = JSON.stringify(S); } catch {} }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => S.pal === 'auto' && apply());
+const UI = [
+  ['Оформление', [
+    {k: 'pal', t: 'seg', l: 'Палитра', o: [['auto', 'Авто', 'linear-gradient(90deg,#fff 50%,#0b1228 50%)'], ['classic', 'Классика', '#3d3df5'], ['night', 'Ночь', '#0b1228'], ['forest', 'Лес', '#1f9d6b'], ['sunset', 'Закат', '#e8503a'], ['ocean', 'Океан', '#0e8fc4'], ['rose', 'Роза', '#d6336c'], ['lavender', 'Лаванда', '#7048e8'], ['graphite', 'Графит', '#4c8dff'], ['mono', 'Контраст', '#000']]},
+    {k: 'font', t: 'seg', l: 'Шрифт', o: [['onest', 'Onest'], ['system', 'Системный'], ['serif', 'С засечками'], ['mono', 'Моно'], ['round', 'Округлый']]},
+    {k: 'btn', t: 'seg', l: 'Кнопки управления', o: [['round', 'Круглые'], ['square', 'Квадратные']]},
+    {k: 'anim', t: 'seg', l: 'Анимации', o: [['off', 'Выкл'], ['soft', 'Мягкие'], ['strong', 'Сильные']]}]],
+  ['Фон', [
+    {k: 'bgm', t: 'seg', l: 'Тип фона', o: [['default', 'Стандартный'], ['preset', 'Градиент'], ['photo', 'Моё фото']]},
+    {k: 'bgp', t: 'seg', l: 'Готовые градиенты', o: Object.entries(BGP).map(([id, v]) => [id, v[0], v[1]])},
+    {t: 'photo', l: 'Своё фото на фон'},
+    {k: 'bgblur', t: 'range', l: 'Размытие', min: 0, max: 30, u: ' px'},
+    {k: 'bgveil', t: 'range', l: 'Затемнение / вуаль', min: 0, max: 90, u: ' %'}]],
+  ['Встреча', [
+    {k: 'fit', t: 'seg', l: 'Видео в плитках', o: [['cover', 'Заполнять'], ['contain', 'Целиком']]},
+    {k: 'mir', t: 'sw', l: 'Зеркалить моё видео'}, {k: 'self', t: 'sw', l: 'Показывать моё видео'},
+    {k: 'names', t: 'sw', l: 'Подписи с именами'}, {k: 'meta', t: 'sw', l: 'Таймер и число участников'},
+    {k: 'gap', t: 'range', l: 'Расстояние между плитками', min: 0, max: 32, u: ' px'},
+    {k: 'dk', t: 'range', l: 'Размер кнопок управления', min: 80, max: 130, u: ' %'}]],
+  ['Нижняя панель', [{t: 'order', l: 'Расположение кнопок во встрече'}]],
+  ['Звук и уведомления', [{k: 'sounds', t: 'sw', l: 'Звуковые сигналы'}, {k: 'notify', t: 'sw', l: 'Подсказки о событиях'}]],
+  ['Камера и микрофон', [
+    {k: 'cam', t: 'dev', kind: 'videoinput', l: 'Камера'}, {k: 'mic', t: 'dev', kind: 'audioinput', l: 'Микрофон'}, {k: 'spk', t: 'dev', kind: 'audiooutput', l: 'Динамик'},
+    {k: 'q', t: 'seg', l: 'Качество видео', o: [[360, '360p'], [720, '720p'], [1080, '1080p']]},
+    {k: 'ec', t: 'sw', l: 'Эхоподавление'}, {k: 'ns', t: 'sw', l: 'Шумоподавление'}, {k: 'agc', t: 'sw', l: 'Автоусиление звука'}]]];
+/* простые названия устройств: «Встроенная камера», «Гарнитура», «Динамики» вместо длинных технических имён */
+const GEN = {videoinput: 'Камера', audioinput: 'Микрофон', audiooutput: 'Динамики'};
+function devName(raw, kind) {
+  const s = (raw || '').replace(/\s*\([0-9a-f]{4}:[0-9a-f]{4}\)/gi, '').replace(/^(default|communications|по умолчанию|связь)\s*[-–—:]\s*/i, '').replace(/\s+/g, ' ').trim(), t = s.toLowerCase();
+  const rules = {
+    videoinput: [[/virtual|\bobs\b|snap camera|\bndi\b|droidcam|epoccam|xsplit|manycam|виртуальн/, 'Виртуальная камера'], [/back|rear|environment|задн/, 'Задняя камера'], [/front|facetime|\buser\b|фронтальн|передн/, 'Фронтальная камера'], [/built-?in|integrated|internal|встроенн|macbook|imac|laptop/, 'Встроенная камера'], [/webcam|веб-?камер/, 'Веб-камера']],
+    audioinput: [[/virtual|cable|voicemeeter|\bobs\b|stereo mix|микшер/, 'Виртуальный микрофон'], [/airpods|buds|headset|headphone|hands-?free|bluetooth|гарнитур|наушник/, 'Гарнитура'], [/built-?in|internal|integrated|macbook|imac|встроенн|array|dmic|digital microphone/, 'Встроенный микрофон'], [/webcam|camera|камер/, 'Микрофон веб-камеры'], [/\busb\b/, 'USB-микрофон']],
+    audiooutput: [[/hdmi|displayport|display|monitor|монитор|\btv\b/, 'Динамики монитора'], [/airpods|buds|headset|headphone|hands-?free|bluetooth|гарнитур|наушник/, 'Наушники'], [/built-?in|internal|macbook|встроенн|speaker|динамик|колонк|realtek/, 'Динамики']]};
+  for (const [re, n] of rules[kind] || []) if (re.test(t)) return n;
+  const short = s.replace(/\(([^)]*)\)/g, ' $1 ').replace(/\b(microphone|mic|speakers?|headphones?|camera|webcam|hd|uvc|video|audio|device|high definition|input|output|usb|stereo)\b/gi, ' ').replace(/[-–—_,:]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return short.length >= 2 ? short.slice(0, 24).trim() : GEN[kind]; }
+function friendlyDevs(devs, kind) {
+  const list = devs.filter(d => d.kind === kind && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications'), seen = {};
+  return list.map(d => { const base = d.label ? devName(d.label, kind) : GEN[kind], n = seen[base] = (seen[base] || 0) + 1; return {id: d.deviceId, base, n}; })
+    .map((d, _, all) => ({id: d.id, name: all.filter(x => x.base === d.base).length > 1 || (!list[0].label) ? `${d.base} ${d.n}` : d.base})); }
+async function renderSettings() {
+  let devs = []; try { devs = await navigator.mediaDevices.enumerateDevices(); } catch {}
+  const box = $('db'), st = box.scrollTop; box.innerHTML = ''; box.append(newsRow());
+  for (const [title, items] of UI) {
+    const h = document.createElement('h4'); h.textContent = title; box.append(h);
+    for (const c of items) {
+      if (c.kind === 'audiooutput' && !('setSinkId' in HTMLMediaElement.prototype)) continue;
+      const el = document.createElement('div');
+      if (c.t === 'sw') { el.className = 'swr'; el.innerHTML = `<span>${c.l}</span><input type="checkbox" role="switch" ${S[c.k] ? 'checked' : ''}>`; el.querySelector('input').onchange = e => set(c.k, e.target.checked); }
+      else {
+        el.className = 'ctl2'; el.innerHTML = `<span>${c.l}</span>`;
+        if (c.t === 'seg') { const r = document.createElement('div'); r.className = 'chips';
+          for (const [v, n, col] of c.o) { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-pressed', String(S[c.k] == v)); b.innerHTML = (col ? `<i style="background:${col}"></i>` : '') + n;
+            b.onclick = () => { set(c.k, v); [...r.children].forEach(x => x.setAttribute('aria-pressed', String(x === b))); }; r.append(b); } el.append(r); }
+        else if (c.t === 'photo') { const th = document.createElement('div'), fi = document.createElement('input'), r = document.createElement('div'), pick = document.createElement('button'), rm = document.createElement('button');
+          th.className = 'phth'; th.tabIndex = 0; th.setAttribute('role', 'button'); fi.type = 'file'; fi.accept = 'image/*'; fi.hidden = true; r.className = 'chips';
+          pick.type = rm.type = 'button'; pick.textContent = 'Выбрать фото'; rm.textContent = 'Убрать фото'; rm.disabled = !bgUrl; r.append(pick, rm);
+          th.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : ''; th.textContent = bgUrl ? '' : 'Нажмите или перетащите фото сюда';
+          const take = async f => { if (!f) return; try { await setPhoto(f); renderSettings(); } catch { toast('Не удалось открыть фото. Попробуйте JPG или PNG.'); } };
+          th.onclick = pick.onclick = () => fi.click(); th.onkeydown = e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), fi.click());
+          fi.onchange = () => take(fi.files[0]); rm.onclick = async () => { await removePhoto(); renderSettings(); };
+          th.ondragover = e => { e.preventDefault(); th.classList.add('dz'); }; th.ondragleave = () => th.classList.remove('dz');
+          th.ondrop = e => { e.preventDefault(); th.classList.remove('dz'); take(e.dataTransfer.files[0]); };
+          el.append(th, r, fi); }
+        else if (c.t === 'range') { const i = document.createElement('input'), sp = el.firstChild; i.type = 'range'; i.min = c.min; i.max = c.max; i.value = S[c.k]; sp.dataset.v = S[c.k]; sp.dataset.u = c.u || ''; i.oninput = () => { set(c.k, +i.value); sp.dataset.v = i.value; }; el.append(i); }
+        else if (c.t === 'order') buildOrder(el);
+        else if (c.t === 'dev') { const sel = document.createElement('select'), list = friendlyDevs(devs, c.kind);
+          sel.innerHTML = '<option value="">По умолчанию</option>' + list.map(d => `<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
+          sel.value = list.some(d => d.id === S[c.k]) ? S[c.k] : ''; sel.onchange = () => set(c.k, sel.value); el.append(sel); }
+      }
+      box.append(el);
+    }
+  }
+  box.scrollTop = st;
+}
+function set(k, v) { S[k] = v; apply();
+  if (k === 'q') { const t = local && local.getVideoTracks()[0], [w, h] = QS[v]; t && t.applyConstraints({width: {ideal: w}, height: {ideal: h}}).catch(() => {}); }
+  if (['ec', 'ns', 'agc'].includes(k)) { const t = local && local.getAudioTracks()[0]; t && t.applyConstraints(ac()).catch(() => {}); }
+  if (k === 'cam') switchDevice('video', v); if (k === 'mic') switchDevice('audio', v);
+  if (k === 'spk') document.querySelectorAll('video').forEach(applySink); }
+async function switchDevice(kind, id) {
+  if (!local) return;
+  const old = local.getTracks().find(t => t.kind === kind), video = kind === 'video';
+  if (!old && room && !(video ? canCam() : canMic())) return;
+  const base = video ? vc() : ac(), get = () => navigator.mediaDevices.getUserMedia({[kind]: id ? {...base, deviceId: {exact: id}} : base});
+  try {
+    let ns; try { ns = await get(); } catch (e) { if (old && (e.name === 'NotReadableError' || e.name === 'AbortError')) { old.stop(); ns = await get(); } else throw e; }
+    const nt = ns.getTracks()[0]; if (!old) { if (video) camOn = true; else micOn = true; }
+    nt.enabled = video ? camOn : micOn;
+    if (room && !(video && sharing)) { old ? R.replaceTrack(old, nt, local) : R.addTrack(nt, local); }
+    if (old) { local.removeTrack(old); old.stop(); } local.addTrack(nt);
+    if (!video) { watch(local, 'pv', () => document.querySelector('.prev')); if (room) watch(local, me.uid); }
+    else $('pv').srcObject = local;
+    $('perm').classList.add('hide'); paintCtl(); if (room) sync(video ? {cam: camOn} : {mic: micOn});
+  } catch (e) { toast(e && e.name === 'NotAllowedError' ? 'Нет доступа к устройству: разрешите его в настройках браузера.' : 'Не удалось переключить устройство.'); } }
+/* ---------- расположение кнопок: настройка в панели «Настройки», во встрече кнопки остаются обычными ---------- */
+P.grip = '<circle cx="9" cy="6" r="1.1"/><circle cx="15" cy="6" r="1.1"/><circle cx="9" cy="12" r="1.1"/><circle cx="15" cy="12" r="1.1"/><circle cx="9" cy="18" r="1.1"/><circle cx="15" cy="18" r="1.1"/>';
+P.up = '<path d="M18 15l-6-6-6 6"/>'; P.down = '<path d="M6 9l6 6 6-6"/>'; P.spark = '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>';
+const OL = {bm: ['mic', 'Микрофон'], bc: ['cam', 'Камера'], bs: ['scr', 'Показ экрана'], bw: ['wboard', 'Доска'], bz: ['wsmile', 'Реакции'], bl: ['wlist', 'Опросы, руки и журнал'], bh: ['hand', 'Поднять руку'], bt: ['chat', 'Чат'], bset: ['gear', 'Настройки'], br: ['room', 'Настройки комнаты (организатор)']};
+function buildOrder(el) {
+  const prev = document.createElement('div'), list = document.createElement('ol'), last = document.createElement('div'), rb = document.createElement('div'), reset = document.createElement('button');
+  prev.className = 'ordp'; list.className = 'ord'; last.className = 'ordl'; rb.className = 'chips'; reset.type = 'button'; reset.textContent = 'Порядок по умолчанию';
+  last.innerHTML = `<i>${ic('end')}</i><b>Выйти из встречи</b><em>всегда последняя</em>`;
+  const commit = arr => { set('order', arr); draw(); };
+  reset.onclick = () => commit(ORD0.slice());
+  function draw() {
+    prev.innerHTML = [...S.order, 'be'].map(id => `<i class="${id === 'be' ? 'e' : ''}">${ic(id === 'be' ? 'end' : OL[id][0])}</i>`).join('');
+    list.innerHTML = '';
+    S.order.forEach((id, n) => {
+      const li = document.createElement('li'); li.dataset.id = id;
+      li.innerHTML = `<span class="gr" title="Потяните, чтобы переместить">${ic('grip')}</span><i>${ic(OL[id][0])}</i><b>${OL[id][1]}</b>`;
+      for (const [d, ico, lab] of [[-1, 'up', 'Выше'], [1, 'down', 'Ниже']]) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'mv'; b.innerHTML = ic(ico); b.setAttribute('aria-label', `${lab}: ${OL[id][1]}`);
+        b.disabled = n + d < 0 || n + d >= S.order.length;
+        b.onclick = () => { const a = S.order.slice(); a.splice(n + d, 0, a.splice(n, 1)[0]); commit(a); }; li.append(b); }
+      const gr = li.querySelector('.gr');
+      /* захват указателя держит сам список: при переносе пункта в DOM захват с самой ручки сорвался бы */
+      gr.onpointerdown = e => { e.preventDefault(); list.setPointerCapture(e.pointerId); li.classList.add('drag');
+        list.onpointermove = m => { const sib = [...list.children].filter(x => x !== li), after = sib.find(x => { const r = x.getBoundingClientRect(); return m.clientY < r.top + r.height / 2; }); list.insertBefore(li, after || null); };
+        list.onpointerup = list.onpointercancel = () => { list.onpointermove = list.onpointerup = list.onpointercancel = null; li.classList.remove('drag'); commit([...list.children].map(x => x.dataset.id)); }; };
+      list.append(li); }); }
+  rb.append(reset); draw(); el.append(prev, list, last, rb);
+}
+
+/* ---------- раздел «Что добавили»: новые записи добавляйте в начало списка NEWS ---------- */
+const NEWS = [
+  {id: '2026-10-20-live', v: 'Занятие: опросы, журнал, реакции и очередь рук', d: '20 октября 2026', items: [
+    ['new', 'Журнал посещаемости: организатор видит, кто и во сколько вошёл и вышел, и скачивает его в CSV (откроется в Excel). Журнал хранится только на устройстве организатора; участники получают уведомление о том, что он ведётся.'],
+    ['new', 'Опросы: организатор задаёт вопрос и от 2 до 6 вариантов, участники голосуют, результаты обновляются в реальном времени. Организатор видит, кто как проголосовал, завершает, возобновляет и удаляет опросы и скачивает результаты в CSV.'],
+    ['new', 'Один голос на участника: повторный голос не засчитывается ни при двойном нажатии, ни после перезагрузки страницы. Голоса считает только организатор.'],
+    ['new', 'Реакции эмодзи (👍 👏 ❤️ 😂 😮 🎉): всплывают на экране у всех. Организатор может их отключить.'],
+    ['new', 'Очередь поднятых рук: список в порядке поднятия, организатор опускает руки по одной или все сразу, участник видит своё место.'],
+    ['ui', 'Две новые кнопки на нижней панели: «Реакции» и «Опросы, руки и журнал». Их место тоже можно менять в Настройках.']]},
+  {id: '2026-10-19-board', v: 'Электронная доска', d: '20 октября 2026', items: [
+    ['new', 'Электронная доска для занятий: организатор рисует кистью, пишет текст, стирает ластиком и очищает холст. Открывается кнопкой с карандашом на нижней панели и сразу показывается всем.'],
+    ['new', 'Выбор цвета (готовые и свой) и толщины линии, отмена последнего штриха.'],
+    ['new', 'Организатор может разрешить рисовать всем: кнопка «Всем» на доске или переключатель в настройках комнаты. Изменения видны у всех сразу, а кто подключился позже, получает уже нарисованное.'],
+    ['ui', 'Доска подстраивается под экран телефона и компьютера. Пока доска открыта, видео участников уменьшается в ленту сверху.']]},
+  {id: '2026-10-19-order', v: 'Расположение кнопок и этот раздел', d: '20 октября 2026', items: [
+    ['new', 'Порядок кнопок нижней панели можно менять: Настройки → «Нижняя панель». Потяните кнопку за значок слева или нажмите стрелки. Порядок сохраняется после перезагрузки.'],
+    ['new', 'Раздел «Что добавили»: список обновлений с фильтром. Открывается значком искры вверху или из Настроек.'],
+    ['ui', 'Кнопка «Выйти из встречи» всегда стоит последней: её нельзя случайно сдвинуть или потерять.'],
+    ['ui', 'Во встрече кнопки не перетаскиваются, поэтому обычные нажатия работают как раньше.']]},
+  {id: 'host', v: 'Организатор и комната', d: '', items: [
+    ['new', 'Организатор может закрыть комнату, задать лимит участников, отключить чат, микрофоны, камеры и показ экрана.'],
+    ['new', 'Организатор может выключить микрофон участнику, убрать его из встречи или завершить встречу для всех.'],
+    ['ui', 'У организатора рядом с именем стоит звёздочка, а в панели есть кнопка настроек комнаты.']]},
+  {id: 'look', v: 'Оформление и фон', d: '', items: [
+    ['new', 'Своё фото на фон или готовый градиент, с размытием и затемнением. Фото хранится на вашем устройстве.'],
+    ['new', '10 палитр, включая «Авто» по теме устройства, и 5 шрифтов.'],
+    ['ui', 'Кнопки управления круглые или квадратные, их размер и расстояние между плитками настраиваются.'],
+    ['ui', 'Анимации можно выключить или сделать мягче. Говорящий участник подсвечивается рамкой.']]},
+  {id: 'calls', v: 'Звонки и устройства', d: '', items: [
+    ['new', 'Выбор камеры, микрофона и динамика, качество видео 360p, 720p или 1080p, эхо- и шумоподавление, автоусиление звука.'],
+    ['new', 'Плитку участника можно закрепить нажатием: она станет большой.'],
+    ['fix', 'Понятные названия устройств вместо длинных технических имён.'],
+    ['fix', 'Можно войти во встречу, если камера или микрофон не найдены.'],
+    ['fix', 'Код встречи принимается в русской раскладке, с пробелами, заглавными буквами и целой ссылкой.']]},
+  {id: 'entry', v: 'Вход и приглашения', d: '', items: [
+    ['new', 'Регистрация и вход по почте и паролю, а также вход гостем: нужно только имя.'],
+    ['new', 'Ссылка-приглашение: при создании встречи появляется карточка со ссылкой, а тот, кто её откроет, сразу попадает на встречу.'],
+    ['fix', 'Убран синий квадрат при нажатии на кнопки на телефоне.'],
+    ['fix', 'Исправлена пустая страница при запуске.'],
+    ['fix', 'Для показа экрана на телефоне и планшете теперь есть понятное объяснение: браузеры его там не поддерживают.']]}];
+const TAGS = {new: 'Новое', fix: 'Исправлено', ui: 'Интерфейс'};
+let nf = 'all';
+const newsUnseen = () => { try { return localStorage.sc_news !== NEWS[0].id; } catch { return false; } };
+const markNews = () => document.querySelectorAll('[data-news]').forEach(b => b.classList.toggle('new', newsUnseen()));
+function newsRow() { const b = document.createElement('button'); b.type = 'button'; b.className = 'nrow'; b.innerHTML = ic('spark') + '<span>Что добавили</span>' + (newsUnseen() ? '<span class="tg">Новое</span>' : '<em>Обновления</em>'); b.onclick = openNews; return b; }
+function renderNews() {
+  const box = $('nb'), bar = document.createElement('div'); box.innerHTML = ''; bar.className = 'chips'; bar.style.padding = '14px 0 2px';
+  for (const [v, n] of [['all', 'Все'], ['new', 'Новое'], ['fix', 'Исправления'], ['ui', 'Интерфейс']]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = n; b.setAttribute('aria-pressed', String(nf === v));
+    b.onclick = () => { nf = v; renderNews(); }; bar.append(b); }
+  box.append(bar); let any = false;
+  for (const g of NEWS) { const its = g.items.filter(([t]) => nf === 'all' || t === nf); if (!its.length) continue; any = true;
+    const h = document.createElement('h4'); h.textContent = g.v; if (g.d) { const d = document.createElement('span'); d.className = 'wd'; d.textContent = g.d; h.append(d); } box.append(h);
+    for (const [t, text] of its) { const r = document.createElement('div'), tg = document.createElement('span'), p = document.createElement('p'); r.className = 'wi'; tg.className = 'tg ' + t; tg.textContent = TAGS[t]; p.textContent = text; r.append(tg, p); box.append(r); } }
+  if (!any) { const e = document.createElement('p'); e.className = 'wempty'; e.textContent = 'В этой категории пока ничего нет.'; box.append(e); } }
+function openNews() { $('drawer').classList.add('hide'); $('rdrawer').classList.add('hide'); nf = 'all'; renderNews(); $('scrim').classList.remove('hide'); $('ndrawer').classList.remove('hide');
+  try { localStorage.sc_news = NEWS[0].id; } catch {} markNews(); }
+const openSettings = () => { $('ndrawer').classList.add('hide'); $('rdrawer').classList.add('hide'); renderSettings(); $('scrim').classList.remove('hide'); $('drawer').classList.remove('hide'); };
+const closeSettings = () => { $('scrim').classList.add('hide'); $('drawer').classList.add('hide'); $('rdrawer').classList.add('hide'); $('ndrawer').classList.add('hide'); $('ldrawer').classList.add('hide'); };
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener('devicechange', () => { if (!$('drawer').classList.contains('hide')) renderSettings(); });
+document.querySelectorAll('[data-settings]').forEach(b => { b.innerHTML = ic('gear'); b.onclick = openSettings; });
+$('scrim').onclick = $('dx').onclick = $('rx').onclick = $('nx').onclick = closeSettings;
+document.querySelectorAll('[data-news]').forEach(b => { b.innerHTML = ic('spark'); b.onclick = openNews; }); markNews();
+addEventListener('keydown', e => e.key === 'Escape' && closeSettings());
+$('dreset').onclick = async () => { await removePhoto(); S = {...DEF}; apply(); renderSettings(); };
+apply();
+document.querySelectorAll('.hero, .ahero h1').forEach(h => { h.innerHTML = words(h.textContent); });
+loadPhoto();
+boot();
+</script>
+</body>
+</html>
